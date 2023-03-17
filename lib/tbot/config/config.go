@@ -81,9 +81,10 @@ type CLIConf struct {
 
 	Debug bool
 
-	// AuthServer is a Teleport auth server address. It may either point
-	// directly to an auth server, or to a Teleport proxy server in which case
-	// a tunneled auth connection will be established.
+	// AuthServer is a Teleport auth server address. It should point directly
+	// to a Teleport auth server. For now, we will continue to support
+	// specifying the proxy address here, but this support will eventually be
+	// dropped in preference of using Proxy.
 	AuthServer string
 
 	// DataDir stores the bot's internal data.
@@ -211,6 +212,7 @@ type BotConfig struct {
 
 	Debug           bool          `yaml:"debug"`
 	AuthServer      string        `yaml:"auth_server"`
+	ProxyServer     string        `yaml:"proxy_server"`
 	CertificateTTL  time.Duration `yaml:"certificate_ttl"`
 	RenewalInterval time.Duration `yaml:"renewal_interval"`
 	Oneshot         bool          `yaml:"oneshot"`
@@ -318,6 +320,12 @@ func FromCLIConf(cf *CLIConf) (*BotConfig, error) {
 			log.Warnf("CLI parameters are overriding auth server configured in %s", cf.ConfigPath)
 		}
 		config.AuthServer = cf.AuthServer
+	}
+	if cf.Proxy != "" {
+		if config.ProxyServer != "" {
+			log.Warnf("CLI parameters are overriding proxy server configured in %s", cf.ConfigPath)
+		}
+		config.ProxyServer = cf.Proxy
 	}
 
 	if cf.CertificateTTL != 0 {

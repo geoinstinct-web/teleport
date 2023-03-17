@@ -85,6 +85,7 @@ func (b *Bot) AuthenticatedUserClientFromIdentity(ctx context.Context, id *ident
 		return nil, trace.Wrap(err)
 	}
 
+	// TODO: Use proxy address
 	authAddr, err := utils.ParseAddr(b.cfg.AuthServer)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -442,10 +443,6 @@ func (b *Bot) getIdentityFromToken() (*identity.Identity, error) {
 	if !b.cfg.Onboarding.HasToken() {
 		return nil, trace.BadParameter("unable to start: no token present")
 	}
-	addr, err := utils.ParseAddr(b.cfg.AuthServer)
-	if err != nil {
-		return nil, trace.Wrap(err, "invalid auth server address %+v", b.cfg.AuthServer)
-	}
 
 	tlsPrivateKey, sshPublicKey, tlsPublicKey, err := generateKeys()
 	if err != nil {
@@ -465,7 +462,6 @@ func (b *Bot) getIdentityFromToken() (*identity.Identity, error) {
 		ID: auth.IdentityID{
 			Role: types.RoleBot,
 		},
-		AuthServers:        []utils.NetAddr{*addr},
 		PublicTLSKey:       tlsPublicKey,
 		PublicSSHKey:       sshPublicKey,
 		CAPins:             b.cfg.Onboarding.CAPins,
@@ -474,6 +470,21 @@ func (b *Bot) getIdentityFromToken() (*identity.Identity, error) {
 		JoinMethod:         b.cfg.Onboarding.JoinMethod,
 		Expires:            &expires,
 	}
+	if b.cfg.AuthServer != "" {
+		addr, err := utils.ParseAddr(b.cfg.AuthServer)
+		if err != nil {
+			return nil, trace.Wrap(err, "invalid auth server address %+v", b.cfg.AuthServer)
+		}
+		params.AuthServers = []utils.NetAddr{*addr}
+	}
+	if b.cfg.ProxyServer != "" {
+		addr, err := utils.ParseAddr(b.cfg.ProxyServer)
+		if err != nil {
+			return nil, trace.Wrap(err, "invalid proxy address %+v", b.cfg.ProxyServer)
+		}
+		params.ProxyServer = *addr
+	}
+
 	certs, err := auth.Register(params)
 	if err != nil {
 		return nil, trace.Wrap(err)
