@@ -71,12 +71,11 @@ function run_docker {
   distro=$1
   binary=$(basename $2)
 
-  container=$(docker create $distro /tmp/$binary "${@:3}")
+  container=$(docker create -v "$2:/tmp/$binary" $distro /tmp/$binary "${@:3}")
   # I *want* the variable below expanded now, so disabling lint
   # shellcheck disable=SC2064
   trap "docker rm $container > /dev/null" RETURN
 
-  docker cp $2 $container:/tmp/$binary
   docker start $container > /dev/null
   test_result=$(docker wait $container)
 
@@ -90,15 +89,41 @@ function run_docker {
   return $test_result
 }
 
+# Wrapper function for run_docker to assist with running tests in parallel.
+#
+# Arguments:
+# $1    - distro name
+function run_test {
+  DISTRO="$1"
+  echo "============ Checking ${DISTRO} ============"
+  if [ "$(docker pull "${DISTRO}")" ]; then
+    run_docker "$DISTRO" "$PWD/build/teleport" version
+    run_docker "$DISTRO" "$PWD/build/tsh" version
+    run_docker "$DISTRO" "$PWD/build/tctl" version
+    run_docker "$DISTRO" "$PWD/build/tbot" version
+  else
+    echo "Failed to pull ${DISTRO} image, aborting ${DISTRO} test" >&2
+  fi
+}
+
+# Setup
+LOG_DIR="/tmp/distro-logs"
+mkdir -p "$LOG_DIR"
+
+# Job
 for DISTRO in "${DISTROS[@]}";
 do
-  echo "============ Checking ${DISTRO} ============"
-  docker pull "${DISTRO}"
-
-  run_docker "$DISTRO" $PWD/build/teleport version
-  run_docker "$DISTRO" $PWD/build/tsh version
-  run_docker "$DISTRO" $PWD/build/tctl version
-  run_docker "$DISTRO" $PWD/build/tbot version
+  # Write to a log so that it's clear what log lines are associated with the distro
+  echo "Starting test for $DISTRO"
+  run_test "$DISTRO" &> "$LOG_DIR/${DISTRO//\//_}.log" &
 done
+wait
+
+# Results
+echo "Job results:"
+tail -n +1 "$LOG_DIR/"*
+
+# Cleanup
+rm -rf "$LOG_DIR"
 
 exit $EXIT_CODE
