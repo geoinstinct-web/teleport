@@ -129,10 +129,6 @@ describe('onProceed correctly deduplicates, removes static traits, updates meta,
 
     // Test that we are updating the user with the correct traits.
     const mockUser = getMockUser();
-    console.log('want', {
-      ...mockUser,
-      traits: { ...mockUser.traits, ...expected },
-    });
     expect(ctx.userService.updateUser).toHaveBeenCalledWith({
       ...mockUser,
       traits: { ...mockUser.traits, ...expected },
