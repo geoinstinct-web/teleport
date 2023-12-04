@@ -43,7 +43,7 @@ const events = [
   'pointerdown',
 ];
 
-const Authenticated: React.FC<PropsWithChildren<unknown>> = ({ children }) => {
+const Authenticated: React.FC<PropsWithChildren> = ({ children }) => {
   const { attempt, setAttempt } = useAttempt('processing');
 
   useEffect(() => {

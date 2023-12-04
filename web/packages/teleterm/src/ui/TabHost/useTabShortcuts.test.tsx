@@ -156,7 +156,7 @@ function getTestSetup({ documents }: { documents: Document[] }) {
         localClusterUri: workspacesService.getActiveWorkspace().localClusterUri,
       }),
     {
-      wrapper: (props: PropsWithChildren<unknown>) => (
+      wrapper: (props: PropsWithChildren) => (
         <AppContextProvider value={appContext}>
           {props.children}
         </AppContextProvider>

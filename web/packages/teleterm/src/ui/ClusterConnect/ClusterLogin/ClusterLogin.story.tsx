@@ -325,7 +325,7 @@ export const SsoPrompt = () => {
   );
 };
 
-const TestContainer: React.FC<PropsWithChildren<unknown>> = ({ children }) => (
+const TestContainer: React.FC<PropsWithChildren> = ({ children }) => (
   <>
     <span>Bordered box is not part of the component</span>
     <Box
