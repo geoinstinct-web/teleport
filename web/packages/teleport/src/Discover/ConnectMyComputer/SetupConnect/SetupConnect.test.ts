@@ -72,7 +72,9 @@ describe('usePollForConnectMyComputerNode', () => {
     expect(result.current.node).toBeFalsy();
     expect(result.current.isPolling).toBe(true);
 
-    await waitFor(() => expect(result.current.node).toEqual(expectedNode));
+    await waitFor(() => expect(result.current.node).toEqual(expectedNode), {
+      interval: 3,
+    });
     expect(result.current.isPolling).toBe(false);
   });
 
@@ -124,11 +126,13 @@ describe('usePollForConnectMyComputerNode', () => {
       pingInterval: 1,
     });
 
-    await waitFor(() => expect(result.current.node).toBeDefined());
+    await waitFor(() => expect(result.current.node).toBeTruthy(), {
+      interval: 3,
+    });
 
     expect(userService.reloadUser).toHaveBeenCalled();
 
-    await waitFor(() => expect(result.current.node).toEqual(expectedNode));
+    expect(result.current.node).toEqual(expectedNode);
     expect(result.current.isPolling).toBe(false);
   });
 });
