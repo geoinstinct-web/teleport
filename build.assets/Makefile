@@ -199,13 +199,12 @@ buildbox-arm:
 	$(call PULL_ON_CI,$(BUILDBOX_ARM))
 	docker build \
 		--build-arg BUILDBOX_VERSION=$(BUILDBOX_VERSION) \
-		--cache-from $(BUILDBOX) \
-		--cache-from $(BUILDBOX_ARM) \
 		--build-arg UID=$(UID) \
 		--build-arg GID=$(GID) \
 		--build-arg BUILDARCH=$(RUNTIME_ARCH) \
 		--build-arg GOLANG_VERSION=$(GOLANG_VERSION) \
 		--build-arg NODE_VERSION=$(NODE_VERSION) \
+		--cache-from $(BUILDBOX_ARM) \
 		--tag $(BUILDBOX_ARM) -f Dockerfile-arm .
 
 CONNECT_VERSION ?= $(VERSION)
@@ -232,12 +231,6 @@ teleterm: buildbox-connect
 	# Always run this image as user 1000, as the Node base image assumes that.
 	docker run $(DOCKERFLAGS) -u 1000:1000 $(BUILDBOX_CONNECT) \
 		bash -c "cd $(SRCDIR) && export CONNECT_TSH_BIN_PATH=\$$PWD/../teleport/build/tsh && yarn install --frozen-lockfile && yarn build-term && yarn package-term -c.extraMetadata.version=$(CONNECT_VERSION)"
-
-# Builds webassets inside Docker.
-.PHONY:ui
-ui: buildbox
-	docker run -u $(UID):$(GID) -v "$$(pwd)/../":/teleport $(BUILDBOX) \
-		bash -c "cd ../teleport && yarn install --frozen-lockfile && yarn build-ui"
 
 # Builds webassets inside the buildbox-connect container via the
 # Makefile (instead of calling yarn directly as the ui target above does)
