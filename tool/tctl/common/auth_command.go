@@ -33,6 +33,7 @@ import (
 	"github.com/gravitational/trace"
 	"github.com/jonboulle/clockwork"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 
 	"github.com/gravitational/teleport"
 	"github.com/gravitational/teleport/api/client/proto"
@@ -78,7 +79,7 @@ type AuthCommand struct {
 	windowsUser                string
 	windowsDomain              string
 	windowsSID                 string
-	signOverwrite              bool
+	outputOverwrite            bool
 	password                   string
 	caType                     string
 	streamTarfile              bool
@@ -98,6 +99,18 @@ type AuthCommand struct {
 	// testInsecureSkipVerify is used to skip TLS verification during tests
 	// when connecting to the proxy ping address.
 	testInsecureSkipVerify bool
+	// overrideExportFunc is used to override/mock client export func in
+	// tctl auth export tests.
+	overrideExportFunc func(context.Context, auth.ClientI, client.ExportAuthoritiesRequest) ([][]byte, error)
+	// stdout allows to switch the standard output source. Used in tests.
+	stdout io.Writer
+}
+
+func (a *AuthCommand) Stdout() io.Writer {
+	if a.stdout == nil {
+		return os.Stdout
+	}
+	return a.stdout
 }
 
 // Initialize allows TokenCommand to plug itself into the CLI parser
@@ -112,6 +125,8 @@ func (a *AuthCommand) Initialize(app *kingpin.Application, config *servicecfg.Co
 	a.authExport.Flag("type",
 		fmt.Sprintf("export certificate type (%v)", strings.Join(allowedCertificateTypes, ", "))).
 		EnumVar(&a.authType, allowedCertificateTypes...)
+	a.authExport.Flag("out", "CA output").Short('o').StringVar(&a.output)
+	a.authExport.Flag("overwrite", "Whether to overwrite existing destination files. When not set, user will be prompted before overwriting any existing file.").BoolVar(&a.outputOverwrite)
 
 	a.authGenerate = auth.Command("gen", "Generate a new SSH keypair.").Hidden()
 	a.authGenerate.Flag("pub-key", "path to the public key").Required().StringVar(&a.genPubPath)
@@ -131,7 +146,7 @@ func (a *AuthCommand) Initialize(app *kingpin.Application, config *servicecfg.Co
 		DurationVar(&a.genTTL)
 	a.authSign.Flag("compat", "OpenSSH compatibility flag").StringVar(&a.compatibility)
 	a.authSign.Flag("proxy", `Address of the Teleport proxy. When --format is set to "kubernetes", this address will be set as cluster address in the generated kubeconfig file`).StringVar(&a.proxyAddr)
-	a.authSign.Flag("overwrite", "Whether to overwrite existing destination files. When not set, user will be prompted before overwriting any existing file.").BoolVar(&a.signOverwrite)
+	a.authSign.Flag("overwrite", "Whether to overwrite existing destination files. When not set, user will be prompted before overwriting any existing file.").BoolVar(&a.outputOverwrite)
 	a.authSign.Flag("tar", "Create a tarball of the resulting certificates and stream to stdout.").BoolVar(&a.streamTarfile)
 	// --kube-cluster was an unfortunately chosen flag name, before teleport
 	// supported kubernetes_service and registered kubernetes clusters that are
@@ -215,6 +230,9 @@ func (a *AuthCommand) ExportAuthorities(ctx context.Context, clt auth.ClientI) e
 	if a.exportPrivateKeys {
 		exportFunc = client.ExportAuthoritiesSecrets
 	}
+	if a.overrideExportFunc != nil {
+		exportFunc = a.overrideExportFunc
+	}
 
 	authorities, err := exportFunc(
 		ctx,
@@ -229,7 +247,51 @@ func (a *AuthCommand) ExportAuthorities(ctx context.Context, clt auth.ClientI) e
 		return trace.Wrap(err)
 	}
 
-	fmt.Println(authorities)
+	if a.output != "" {
+		fileExt := ".cer"
+		if a.exportPrivateKeys {
+			fileExt = ".key"
+		}
+		writer := &identityfile.StandardConfigWriter{}
+		files := map[string][]byte{}
+		for i, data := range authorities {
+			filepath := a.output + fileExt
+			if len(authorities) > 1 {
+				filepath = fmt.Sprintf("%s-%d%s", a.output, i, fileExt)
+			}
+			files[filepath] = data
+		}
+		err := identityfile.CheckOverwrite(ctx, writer, a.outputOverwrite, maps.Keys(files)...)
+		if err != nil {
+			return trace.Wrap(err)
+		}
+		var permissions os.FileMode = 0600
+		if !a.exportPrivateKeys {
+			// public certs should have less restrictive file permissions.
+			permissions = 0644
+		}
+		for path, data := range files {
+			err := writer.WriteFile(path, data, permissions)
+			if err != nil {
+				return trace.Wrap(err)
+			}
+		}
+		return nil
+	}
+
+	if len(authorities) > 1 {
+		exportKind := "cert"
+		if a.exportPrivateKeys {
+			exportKind = "key"
+		}
+		return trace.BadParameter(
+			"exporting multiple CA %s files to stdout will not decode properly, provide a file name with --out=<file>",
+			exportKind,
+		)
+	}
+	for _, data := range authorities {
+		fmt.Fprintf(a.Stdout(), "%s\n", data)
+	}
 
 	return nil
 }
@@ -252,7 +314,7 @@ func (a *AuthCommand) GenerateKeys(ctx context.Context) error {
 		return trace.Wrap(err)
 	}
 
-	fmt.Printf("wrote public key to: %v and private key to: %v\n", a.genPubPath, a.genPrivPath)
+	fmt.Fprintf(a.Stdout(), "wrote public key to: %v and private key to: %v\n", a.genPubPath, a.genPrivPath)
 	return nil
 }
 
@@ -260,7 +322,7 @@ func (a *AuthCommand) GenerateKeys(ctx context.Context) error {
 func (a *AuthCommand) GenerateAndSignKeys(ctx context.Context, clusterAPI auth.ClientI) error {
 	if a.streamTarfile {
 		tarWriter := newTarWriter(clockwork.NewRealClock())
-		defer tarWriter.Archive(os.Stdout)
+		defer tarWriter.Archive(a.Stdout())
 		a.identityWriter = tarWriter
 	}
 
@@ -339,7 +401,7 @@ func (a *AuthCommand) generateWindowsCert(ctx context.Context, clusterAPI auth.C
 			WindowsDesktopCerts: map[string][]byte{a.windowsUser: certDER},
 		},
 		Format:               a.outputFormat,
-		OverwriteDestination: a.signOverwrite,
+		OverwriteDestination: a.outputOverwrite,
 		Writer:               a.identityWriter,
 	})
 	if err != nil {
@@ -376,7 +438,7 @@ func (a *AuthCommand) generateSnowflakeKey(ctx context.Context, clusterAPI auth.
 		OutputPath:           a.output,
 		Key:                  key,
 		Format:               a.outputFormat,
-		OverwriteDestination: a.signOverwrite,
+		OverwriteDestination: a.outputOverwrite,
 		Writer:               a.identityWriter,
 	})
 	if err != nil {
@@ -403,9 +465,9 @@ func (a *AuthCommand) RotateCertAuthority(ctx context.Context, client auth.Clien
 		return err
 	}
 	if a.rotateTargetPhase != "" {
-		fmt.Printf("Updated rotation phase to %q. To check status use 'tctl status'\n", a.rotateTargetPhase)
+		fmt.Fprintf(a.Stdout(), "Updated rotation phase to %q. To check status use 'tctl status'\n", a.rotateTargetPhase)
 	} else {
-		fmt.Printf("Initiated certificate authority rotation. To check status use 'tctl status'\n")
+		fmt.Fprintf(a.Stdout(), "Initiated certificate authority rotation. To check status use 'tctl status'\n")
 	}
 
 	return nil
@@ -424,11 +486,11 @@ func (a *AuthCommand) ListAuthServers(ctx context.Context, clusterAPI auth.Clien
 	case teleport.Text:
 		// auth servers don't have labels.
 		verbose := false
-		return sc.writeText(os.Stdout, verbose)
+		return sc.writeText(a.Stdout(), verbose)
 	case teleport.YAML:
-		return writeYAML(sc, os.Stdout)
+		return writeYAML(sc, a.Stdout())
 	case teleport.JSON:
-		return writeJSON(sc, os.Stdout)
+		return writeJSON(sc, a.Stdout())
 	}
 
 	return nil
@@ -447,7 +509,7 @@ func (a *AuthCommand) GenerateCRLForCA(ctx context.Context, clusterAPI auth.Clie
 		return trace.Wrap(err)
 	}
 
-	fmt.Println(string(crl))
+	fmt.Fprintln(a.Stdout(), string(crl))
 	return nil
 }
 
@@ -494,7 +556,7 @@ func (a *AuthCommand) generateHostKeys(ctx context.Context, clusterAPI auth.Clie
 		OutputPath:           filePath,
 		Key:                  key,
 		Format:               a.outputFormat,
-		OverwriteDestination: a.signOverwrite,
+		OverwriteDestination: a.outputOverwrite,
 		Writer:               a.identityWriter,
 	})
 	if err != nil {
@@ -525,7 +587,7 @@ func (a *AuthCommand) generateDatabaseKeysForKey(ctx context.Context, clusterAPI
 		ClusterAPI:         clusterAPI,
 		Principals:         principals,
 		OutputFormat:       a.outputFormat,
-		OutputCanOverwrite: a.signOverwrite,
+		OutputCanOverwrite: a.outputOverwrite,
 		OutputLocation:     a.output,
 		TTL:                a.genTTL,
 		Key:                key,
@@ -909,7 +971,7 @@ func (a *AuthCommand) generateUserKeys(ctx context.Context, clusterAPI auth.Clie
 		KubeProxyAddr:        a.proxyAddr,
 		KubeClusterName:      a.kubeCluster,
 		KubeTLSServerName:    kubeTLSServerName,
-		OverwriteDestination: a.signOverwrite,
+		OverwriteDestination: a.outputOverwrite,
 		Writer:               a.identityWriter,
 	})
 	if err != nil {
@@ -931,7 +993,7 @@ func (a *AuthCommand) checkLeafCluster(clusterAPI auth.ClientI) error {
 	if a.outputFormat != identityfile.FormatKubernetes && a.leafCluster != "" {
 		// User set --cluster but it's not actually used for the chosen --format.
 		// Print a warning but continue.
-		fmt.Printf("Note: --cluster is only used with --format=%q, ignoring for --format=%q\n", identityfile.FormatKubernetes, a.outputFormat)
+		fmt.Fprintf(a.Stdout(), "Note: --cluster is only used with --format=%q, ignoring for --format=%q\n", identityfile.FormatKubernetes, a.outputFormat)
 	}
 
 	if a.outputFormat != identityfile.FormatKubernetes {
@@ -1145,5 +1207,5 @@ func (a *AuthCommand) helperMsgDst() io.Writer {
 	if a.streamTarfile {
 		return os.Stderr
 	}
-	return os.Stdout
+	return a.Stdout()
 }
