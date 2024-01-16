@@ -71,7 +71,7 @@ endif
 
 # PAM support will only be built into Teleport if headers exist at build time.
 PAM_MESSAGE := without-PAM-support
-ifneq ("$(wildcard /usr/include/security/pam_appl.h)","")
+ifneq ("$(wildcard ${SYSROOT}/include/security/pam_appl.h)","")
 PAM_TAG := pam
 PAM_MESSAGE := with-PAM-support
 else
@@ -101,6 +101,8 @@ CARGO_TARGET_darwin_amd64 := x86_64-apple-darwin
 CARGO_TARGET_darwin_arm64 := aarch64-apple-darwin
 CARGO_TARGET_linux_arm64 := aarch64-unknown-linux-gnu
 CARGO_TARGET_linux_amd64 := x86_64-unknown-linux-gnu
+CARGO_TARGET_linux_386 := i686-unknown-linux-gnu
+CARGO_TARGET_linux_arm := armv7-unknown-linux-gnueabi
 
 CARGO_TARGET := --target=${CARGO_TARGET_${OS}_${ARCH}}
 
@@ -115,17 +117,12 @@ ifeq ($(RDPCLIENT_SKIP_BUILD),0)
 ifneq ($(CHECK_RUST),)
 ifneq ($(CHECK_CARGO),)
 
-# Do not build RDP client on ARM or 386.
-ifneq ("$(ARCH)","arm")
-ifneq ("$(ARCH)","386")
 with_rdpclient := yes
 RDPCLIENT_MESSAGE := with-Windows-RDP-client
 RDPCLIENT_TAG := desktop_access_rdp
 endif
 endif
 
-endif
-endif
 endif
 
 # Set C_ARCH for building libfido2 and dependencies. ARCH is the Go
@@ -232,22 +229,12 @@ TEST_LOG_DIR = ${abspath ./test-logs}
 
 # Set CGOFLAG and BUILDFLAGS as needed for the OS/ARCH.
 ifeq ("$(OS)","linux")
-# True if $ARCH == amd64 || $ARCH == arm64
-ifeq ("$(ARCH)","arm64")
-	ifeq ($(IS_NATIVE_BUILD),"no")
-		CGOFLAG += CC=aarch64-linux-gnu-gcc
-	endif
-else ifeq ("$(ARCH)","arm")
+ifeq ("$(ARCH)","arm")
 CGOFLAG = CGO_ENABLED=1
 
-# ARM builds need to specify the correct C compiler
-ifeq ($(IS_NATIVE_BUILD),"no")
-CC=arm-linux-gnueabihf-gcc
-endif
-
 # Add -debugtramp=2 to work around 24 bit CALL/JMP instruction offset.
-BUILDFLAGS = $(ADDFLAGS) -ldflags '-w -s -debugtramp=2 $(KUBECTL_SETVERSION)' -trimpath -buildmode=pie
-endif
+BUILDFLAGS = $(ADDFLAGS) -ldflags '-w -s -debugtramp=2 $(KUBECTL_SETVERSION)' -trimpath
+endif # ARCH == arm
 endif # OS == linux
 
 # Windows requires extra parameters to cross-compile with CGO.
@@ -326,12 +313,12 @@ $(RS_BPF_BUILDDIR):
 
 # Build BPF code
 $(ER_BPF_BUILDDIR)/%.bpf.o: bpf/enhancedrecording/%.bpf.c $(wildcard bpf/*.h) | $(ER_BPF_BUILDDIR)
-	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(KERNEL_ARCH) -I/usr/libbpf-${LIBBPF_VER}/include $(INCLUDES) $(CLANG_BPF_SYS_INCLUDES) -c $(filter %.c,$^) -o $@
+	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(KERNEL_ARCH) -I${SYSROOT}/usr/include/ $(INCLUDES) $(CLANG_BPF_SYS_INCLUDES) -c $(filter %.c,$^) -o $@
 	$(LLVM_STRIP) -g $@ # strip useless DWARF info
 
 # Build BPF code
 $(RS_BPF_BUILDDIR)/%.bpf.o: bpf/restrictedsession/%.bpf.c $(wildcard bpf/*.h) | $(RS_BPF_BUILDDIR)
-	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(KERNEL_ARCH) -I/usr/libbpf-${LIBBPF_VER}/include $(INCLUDES) $(CLANG_BPF_SYS_INCLUDES) -c $(filter %.c,$^) -o $@
+	$(CLANG) -g -O2 -target bpf -D__TARGET_ARCH_$(KERNEL_ARCH) -I${SYSROOT}/usr/include $(INCLUDES) $(CLANG_BPF_SYS_INCLUDES) -c $(filter %.c,$^) -o $@
 	$(LLVM_STRIP) -g $@ # strip useless DWARF info
 
 .PHONY: bpf-rs-bytecode
