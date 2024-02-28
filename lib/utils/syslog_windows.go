@@ -17,11 +17,18 @@ limitations under the License.
 package utils
 
 import (
+	"io"
+
 	"github.com/gravitational/trace"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-// SwitchLoggerToSyslog always returns an error on Windows.
-func SwitchLoggerToSyslog(logger *log.Logger) error {
-	return trace.NotImplemented("cannot use syslog on Windows")
+// NewSyslogHook always returns an error on Windows.
+func NewSyslogHook(io.Writer) (logrus.Hook, error) {
+	return nil, trace.NotImplemented("cannot use syslog on Windows")
+}
+
+// NewSyslogWriter always returns an error on Windows.
+func NewSyslogWriter() (io.Writer, error) {
+	return nil, trace.NotImplemented("cannot use syslog on Windows")
 }
