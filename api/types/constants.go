@@ -1016,6 +1016,9 @@ const (
 var SessionRecordingModes = []string{RecordAtNode, RecordAtProxy, RecordOff, RecordAtNodeSync, RecordAtProxySync}
 
 // TunnelType is the type of tunnel.
+// Example YAML:
+// ---
+// node|proxy|app|kube|db|windows_desktop|okta
 type TunnelType string
 
 const (
