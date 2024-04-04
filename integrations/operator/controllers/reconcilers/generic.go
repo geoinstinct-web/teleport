@@ -103,6 +103,8 @@ func (r resourceReconciler[T, K]) Upsert(ctx context.Context, obj kclient.Object
 	debugLog.Info("Converting resource from unstructured", "crType", reflect.TypeOf(k8sResource))
 
 	// If an error happen we want to put it in status.conditions before returning.
+	debugLog.Info("object", "object", u.Object)
+	debugLog.Info("k8sResource", "k8sResource", k8sResource)
 	err := runtime.DefaultUnstructuredConverter.FromUnstructuredWithValidation(
 		u.Object,
 		k8sResource,
