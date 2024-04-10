@@ -660,6 +660,26 @@ func ToOneOf(in AuditEvent) (*OneOf, error) {
 		out.Event = &OneOf_DatabaseUserDeactivate{
 			DatabaseUserDeactivate: e,
 		}
+	case *PostgresRowDescription:
+		out.Event = &OneOf_PostgresRowDescription{
+			PostgresRowDescription: e,
+		}
+	case *PostgresDataRow:
+		out.Event = &OneOf_PostgresDataRow{
+			PostgresDataRow: e,
+		}
+	case *PostgresCommandComplete:
+		out.Event = &OneOf_PostgresCommandComplete{
+			PostgresCommandComplete: e,
+		}
+	case *PostgresReadyForQuery:
+		out.Event = &OneOf_PostgresReadyForQuery{
+			PostgresReadyForQuery: e,
+		}
+	case *PostgresErrorResponse:
+		out.Event = &OneOf_PostgresErrorResponse{
+			PostgresErrorResponse: e,
+		}
 
 	default:
 		slog.ErrorContext(context.Background(), "Attempted to convert dynamic event of unknown type into protobuf event.", "event_type", in.GetType())

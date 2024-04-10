@@ -2113,13 +2113,17 @@ const (
 	keyDown  = 66
 )
 
+// TODO(gabrielcorado): move database session recording player to an external
+// function.
 func playSession(ctx context.Context, sessionID string, speed float64, streamer player.Streamer) error {
 	sid, err := session.ParseID(sessionID)
 	if err != nil {
 		return trace.Wrap(err)
 	}
 
+	// TODO(gabrielcorado): using terminal breaks the table.
 	term, err := terminal.New(os.Stdin, os.Stdout, os.Stderr)
+	// term, err := terminal.New(new(bytes.Buffer), io.Discard, io.Discard)
 	if err != nil {
 		return trace.Wrap(err)
 	}
@@ -2184,6 +2188,7 @@ func playSession(ctx context.Context, sessionID string, speed float64, streamer 
 
 	var lastTime time.Time
 	for evt := range player.C() {
+		logrus.Debugf("=== receiving any event %T %v", evt, evt)
 		switch evt := evt.(type) {
 		case *apievents.WindowsDesktopSessionStart:
 			// TODO(zmb3): restore the playback URL
@@ -2191,7 +2196,7 @@ func playSession(ctx context.Context, sessionID string, speed float64, streamer 
 				" Export the recording to video with tsh recordings export" +
 				" or view the recording in your web browser."
 			return trace.BadParameter(message)
-		case *apievents.AppSessionStart, *apievents.DatabaseSessionStart, *apievents.AppSessionChunk:
+		case *apievents.AppSessionStart, *apievents.AppSessionChunk:
 			return trace.BadParameter("Interactive session replay is only supported for SSH and Kubernetes sessions." +
 				" To play app or database sessions, specify --format=json or --format=yaml.")
 		case *apievents.Resize:
@@ -2208,6 +2213,11 @@ func playSession(ctx context.Context, sessionID string, speed float64, streamer 
 				term.SetWindowTitle(evt.Time.Format(time.Stamp))
 			}
 			lastTime = evt.Time
+		case *apievents.DatabaseSessionStart:
+			if evt.DatabaseProtocol != defaults.ProtocolPostgres {
+				return trace.BadParameter("Interactive database session replay is only supported for PostgreSQL." +
+					" To play other database session, specify --format=json or --format=yaml.")
+			}
 		default:
 			continue
 		}
