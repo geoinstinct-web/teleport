@@ -22,6 +22,7 @@ import (
 	"context"
 
 	"github.com/gravitational/trace"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitational/teleport/api/client"
@@ -55,7 +56,8 @@ func (r botClient) Create(ctx context.Context, bot *machineidv1pb.Bot) error {
 // Update updates a Teleport bot
 func (r botClient) Update(ctx context.Context, bot *machineidv1pb.Bot) error {
 	_, err := r.teleportClient.BotServiceClient().UpdateBot(ctx, &machineidv1pb.UpdateBotRequest{
-		Bot: bot,
+		Bot:        bot,
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"spec.roles", "spec.traits"}},
 	})
 	return trace.Wrap(err)
 }
