@@ -42,6 +42,8 @@ import (
 	"github.com/gravitational/teleport/api/client"
 	"github.com/gravitational/teleport/api/client/proto"
 	apidefaults "github.com/gravitational/teleport/api/defaults"
+	accessmonitoringrulesv1 "github.com/gravitational/teleport/api/gen/proto/go/teleport/accessmonitoringrules/v1"
+	crownjewelv1 "github.com/gravitational/teleport/api/gen/proto/go/teleport/crownjewel/v1"
 	headerv1 "github.com/gravitational/teleport/api/gen/proto/go/teleport/header/v1"
 	kubewaitingcontainerpb "github.com/gravitational/teleport/api/gen/proto/go/teleport/kubewaitingcontainer/v1"
 	notificationsv1 "github.com/gravitational/teleport/api/gen/proto/go/teleport/notifications/v1"
@@ -117,6 +119,8 @@ type testPack struct {
 	accessLists             services.AccessLists
 	kubeWaitingContainers   services.KubeWaitingContainer
 	notifications           services.Notifications
+	accessMonitoringRules   services.AccessMonitoringRules
+	crownJewels             services.CrownJewels
 }
 
 // testFuncs are functions to support testing an object in a cache.
@@ -240,19 +244,21 @@ func newPackWithoutCache(dir string, opts ...packOption) (*testPack, error) {
 		return nil, trace.Wrap(err)
 	}
 
+	idService := local.NewTestIdentityService(p.backend)
+
 	p.trustS = local.NewCAService(p.backend)
 	p.clusterConfigS = clusterConfig
 	p.provisionerS = local.NewProvisioningService(p.backend)
 	p.eventsS = newProxyEvents(local.NewEventsService(p.backend), cfg.ignoreKinds)
 	p.presenceS = local.NewPresenceService(p.backend)
-	p.usersS = local.NewIdentityService(p.backend)
+	p.usersS = idService
 	p.accessS = local.NewAccessService(p.backend)
 	p.dynamicAccessS = local.NewDynamicAccessService(p.backend)
-	p.appSessionS = local.NewIdentityService(p.backend)
-	p.webSessionS = local.NewIdentityService(p.backend).WebSessions()
-	p.snowflakeSessionS = local.NewIdentityService(p.backend)
-	p.samlIdPSessionsS = local.NewIdentityService(p.backend)
-	p.webTokenS = local.NewIdentityService(p.backend).WebTokens()
+	p.appSessionS = idService
+	p.webSessionS = idService.WebSessions()
+	p.snowflakeSessionS = idService
+	p.samlIdPSessionsS = idService
+	p.webTokenS = idService.WebTokens()
 	p.restrictions = local.NewRestrictionsService(p.backend)
 	p.apps = local.NewAppService(p.backend)
 	p.kubernetes = local.NewKubernetesService(p.backend)
@@ -273,7 +279,7 @@ func newPackWithoutCache(dir string, opts ...packOption) (*testPack, error) {
 	}
 	p.okta = oktaSvc
 
-	igSvc, err := local.NewIntegrationsService(p.backend)
+	igSvc, err := local.NewIntegrationsService(p.backend, local.WithIntegrationsServiceCacheMode(true))
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -302,6 +308,17 @@ func newPackWithoutCache(dir string, opts ...packOption) (*testPack, error) {
 		return nil, trace.Wrap(err)
 	}
 	p.accessLists = accessListsSvc
+	accessMonitoringRuleService, err := local.NewAccessMonitoringRulesService(p.backend)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	p.accessMonitoringRules = accessMonitoringRuleService
+
+	crownJewelsSvc, err := local.NewCrownJewelsService(p.backend)
+	if err != nil {
+		return nil, trace.Wrap(err)
+	}
+	p.crownJewels = crownJewelsSvc
 
 	kubeWaitingContSvc, err := local.NewKubeWaitingContainerService(p.backend)
 	if err != nil {
@@ -357,6 +374,8 @@ func newPack(dir string, setupConfig func(c Config) Config, opts ...packOption) 
 		AccessLists:             p.accessLists,
 		KubeWaitingContainers:   p.kubeWaitingContainers,
 		Notifications:           p.notifications,
+		AccessMonitoringRules:   p.accessMonitoringRules,
+		CrownJewels:             p.crownJewels,
 		MaxRetryPeriod:          200 * time.Millisecond,
 		EventsC:                 p.eventsC,
 	}))
@@ -757,6 +776,8 @@ func TestCompletenessInit(t *testing.T) {
 			AccessLists:             p.accessLists,
 			KubeWaitingContainers:   p.kubeWaitingContainers,
 			Notifications:           p.notifications,
+			AccessMonitoringRules:   p.accessMonitoringRules,
+			CrownJewels:             p.crownJewels,
 			MaxRetryPeriod:          200 * time.Millisecond,
 			EventsC:                 p.eventsC,
 		}))
@@ -831,6 +852,8 @@ func TestCompletenessReset(t *testing.T) {
 		AccessLists:             p.accessLists,
 		KubeWaitingContainers:   p.kubeWaitingContainers,
 		Notifications:           p.notifications,
+		AccessMonitoringRules:   p.accessMonitoringRules,
+		CrownJewels:             p.crownJewels,
 		MaxRetryPeriod:          200 * time.Millisecond,
 		EventsC:                 p.eventsC,
 	}))
@@ -1017,6 +1040,8 @@ func TestListResources_NodesTTLVariant(t *testing.T) {
 		AccessLists:             p.accessLists,
 		KubeWaitingContainers:   p.kubeWaitingContainers,
 		Notifications:           p.notifications,
+		AccessMonitoringRules:   p.accessMonitoringRules,
+		CrownJewels:             p.crownJewels,
 		MaxRetryPeriod:          200 * time.Millisecond,
 		EventsC:                 p.eventsC,
 		neverOK:                 true, // ensure reads are never healthy
@@ -1102,6 +1127,8 @@ func initStrategy(t *testing.T) {
 		AccessLists:             p.accessLists,
 		KubeWaitingContainers:   p.kubeWaitingContainers,
 		Notifications:           p.notifications,
+		AccessMonitoringRules:   p.accessMonitoringRules,
+		CrownJewels:             p.crownJewels,
 		MaxRetryPeriod:          200 * time.Millisecond,
 		EventsC:                 p.eventsC,
 	}))
@@ -2216,7 +2243,7 @@ func TestDiscoveryConfig(t *testing.T) {
 	})
 }
 
-// TestAccessListRules tests that CRUD operations on access list rule resources are
+// TestAuditQuery tests that CRUD operations on access list rule resources are
 // replicated from the backend to the cache.
 func TestAuditQuery(t *testing.T) {
 	t.Parallel()
@@ -2494,6 +2521,34 @@ func TestUserNotifications(t *testing.T) {
 			return items, trace.Wrap(err)
 		},
 		deleteAll: p.notifications.DeleteAllUserNotifications,
+	})
+}
+
+// TestCrownJewel tests that CRUD operations on user notification resources are
+// replicated from the backend to the cache.
+func TestCrownJewel(t *testing.T) {
+	t.Parallel()
+
+	p := newTestPack(t, ForAuth)
+	t.Cleanup(p.Close)
+
+	testResources153(t, p, testFuncs153[*crownjewelv1.CrownJewel]{
+		newResource: func(name string) (*crownjewelv1.CrownJewel, error) {
+			return newCrownJewel(t, name), nil
+		},
+		create: func(ctx context.Context, item *crownjewelv1.CrownJewel) error {
+			_, err := p.crownJewels.CreateCrownJewel(ctx, item)
+			return trace.Wrap(err)
+		},
+		list: func(ctx context.Context) ([]*crownjewelv1.CrownJewel, error) {
+			items, _, err := p.crownJewels.ListCrownJewels(ctx, 0, "")
+			return items, trace.Wrap(err)
+		},
+		cacheList: func(ctx context.Context) ([]*crownjewelv1.CrownJewel, error) {
+			items, _, err := p.crownJewels.ListCrownJewels(ctx, 0, "")
+			return items, trace.Wrap(err)
+		},
+		deleteAll: p.crownJewels.DeleteAllCrownJewels,
 	})
 }
 
@@ -3097,6 +3152,8 @@ func TestCacheWatchKindExistsInEvents(t *testing.T) {
 		types.KindKubeWaitingContainer:    newKubeWaitingContainer(t),
 		types.KindNotification:            types.Resource153ToLegacy(newUserNotification(t, "test")),
 		types.KindGlobalNotification:      types.Resource153ToLegacy(newGlobalNotification(t, "test")),
+		types.KindAccessMonitoringRule:    types.Resource153ToLegacy(newAccessMonitoringRule(t)),
+		types.KindCrownJewel:              types.Resource153ToLegacy(newCrownJewel(t, "test")),
 	}
 
 	for name, cfg := range cases {
@@ -3332,6 +3389,7 @@ func newDiscoveryConfig(t *testing.T, name string) *discoveryconfig.DiscoveryCon
 		},
 	)
 	require.NoError(t, err)
+	discoveryConfig.Status.State = "DISCOVERY_CONFIG_STATE_UNSPECIFIED"
 	return discoveryConfig
 }
 
@@ -3547,6 +3605,18 @@ func newKubeWaitingContainer(t *testing.T) types.Resource {
 	return types.Resource153ToLegacy(waitingCont)
 }
 
+func newCrownJewel(t *testing.T, name string) *crownjewelv1.CrownJewel {
+	t.Helper()
+
+	crownJewel := &crownjewelv1.CrownJewel{
+		Metadata: &headerv1.Metadata{
+			Name: name,
+		},
+	}
+
+	return crownJewel
+}
+
 func newUserNotification(t *testing.T, name string) *notificationsv1.Notification {
 	t.Helper()
 
@@ -3581,6 +3651,16 @@ func newGlobalNotification(t *testing.T, description string) *notificationsv1.Gl
 		},
 	}
 
+	return notification
+}
+
+func newAccessMonitoringRule(t *testing.T) *accessmonitoringrulesv1.AccessMonitoringRule {
+	t.Helper()
+	notification := &accessmonitoringrulesv1.AccessMonitoringRule{
+		Spec: &accessmonitoringrulesv1.AccessMonitoringRuleSpec{
+			Notification: &accessmonitoringrulesv1.Notification{},
+		},
+	}
 	return notification
 }
 
