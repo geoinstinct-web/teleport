@@ -51,6 +51,7 @@ export interface BackendUserPreferences {
   onboard?: OnboardUserPreferences;
   clusterPreferences?: BackendClusterUserPreferences;
   unifiedResourcePreferences?: UnifiedResourcePreferences;
+  keyboardLayout: number;
 }
 
 export async function getUserPreferences(): Promise<UserPreferences> {
@@ -126,6 +127,7 @@ export function makeDefaultUserPreferences(): UserPreferences {
       labelsViewMode: LabelsViewMode.COLLAPSED,
     },
     clusterPreferences: makeDefaultUserClusterPreferences(),
+    keyboardLayout: 0,
   };
 }
 
