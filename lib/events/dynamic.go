@@ -378,6 +378,9 @@ func FromEventFields(fields EventFields) (events.AuditEvent, error) {
 		e = &events.SessionRecordingConfigUpdate{}
 	case DatabaseSessionSpannerRPCEvent:
 		e = &events.SpannerRPC{}
+	case SCIMProvisionEvent, SCIMUpdateEvent, SCIMDeleteEvent:
+		e = &events.SCIMResourceEvent{}
+
 	case UnknownEvent:
 		e = &events.Unknown{}
 

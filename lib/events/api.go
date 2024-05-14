@@ -765,6 +765,17 @@ const (
 	// AccessGraphAccessPathChanged is emitted when an access path is changed in the access graph
 	// and an identity/resource is affected.
 	AccessGraphAccessPathChanged = "access_graph.access_path_changed"
+
+	// SCIMProvisionEvent is emitted when a new resource is provisioned by the
+	// SCIM service. This includes taking ownership of existing users.
+	SCIMProvisionEvent = "scim.provision"
+
+	// SCIMUpdateEvent is emitted when a resource is updated via the SCIM
+	// service. Includes "deactivating" resources (per Okta).
+	SCIMUpdateEvent = "scim.update"
+
+	// SCIMDeleteEvent is emitted when a resource is deleted via SCIM.
+	SCIMDeleteEvent = "scim.delete"
 )
 
 const (
