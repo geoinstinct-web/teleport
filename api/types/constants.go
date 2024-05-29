@@ -38,7 +38,7 @@ const (
 
 	// PackageNameOSS is the teleport package name for the OSS version.
 	PackageNameOSS = "teleport"
-	// PackageNameOSS is the teleport package name for the Enterprise version.
+	// PackageNameEnt is the teleport package name for the Enterprise version.
 	PackageNameEnt = "teleport-ent"
 
 	// ActionRead grants read access (get, list)
@@ -667,11 +667,19 @@ const (
 	// via automatic discovery, to avoid re-running installation commands
 	// on the node.
 	VMIDLabel = TeleportInternalLabelPrefix + "vm-id"
+	// RegionLabel is used to identify virtual machines by region found
+	// via automatic discovery, to avoid re-running installation commands
+	// on the node.
+	RegionLabel = TeleportInternalLabelPrefix + "region"
+	// ResourceGroupLabel is used to identify virtual machines by resource-group found
+	// via automatic discovery, to avoid re-running installation commands
+	// on the node.
+	ResourceGroupLabel = TeleportInternalLabelPrefix + "resource-group"
 	// ProjectIDLabel is used to identify virtual machines by GCP project
 	// id found via automatic discovery, to avoid re-running
 	// installation commands on the node.
 	ProjectIDLabel = TeleportInternalLabelPrefix + "project-id"
-	// ZoneLabek is used to identify virtual machines by GCP zone
+	// ZoneLabel is used to identify virtual machines by GCP zone
 	// found via automatic discovery, to avoid re-running installation
 	// commands on the node.
 	ZoneLabel = TeleportInternalLabelPrefix + "zone"

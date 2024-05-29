@@ -89,6 +89,7 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 		configureDiscoveryBootstrapFlags configureDiscoveryBootstrapFlags
 		dbConfigCreateFlags              createDatabaseConfigFlags
 		systemdInstallFlags              installSystemdFlags
+		installTeleportFlags             installTeleportFlags
 		waitFlags                        waitFlags
 		rawVersion                       bool
 	)
@@ -367,6 +368,14 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	systemdInstall.Flag("output", "Write to stdout with -o=stdout or custom path with -o=file:///path").Short('o').Default(teleport.SchemeStdout).StringVar(&systemdInstallFlags.output)
 	systemdInstall.Alias(systemdInstallExamples) // We're using "alias" section to display usage examples.
 
+	teleportInstall := installCmd.Command("teleport", "Installs teleport in the system (experimental - might be removed).")
+	teleportInstall.Flag("repo-channel", "Repository channel to use (eg stable/cloud, stable/rolling or stable/vX).").Required().StringVar(&installTeleportFlags.RepositoryChannel)
+	teleportInstall.Flag("version", "Binary version to install (eg 15.3.4).").StringVar(&installTeleportFlags.Version)
+	teleportInstall.Flag("proxy", "Teleport public proxy address. Eg https://example.teleport.sh").StringVar(&installTeleportFlags.ProxyPublicAddr)
+	teleportInstall.Flag("token", "Teleport Token name to be used by the new instance.").StringVar(&installTeleportFlags.TokenName)
+	teleportInstall.Flag("enterprise", "Installs the Enterprise version of teleport.").Default("false").BoolVar(&installTeleportFlags.Enterprise)
+	teleportInstall.Flag("auto-upgrade", "Enables auto-upgrades (requires systemd).").Default("false").BoolVar(&installTeleportFlags.AutoUpgrades)
+
 	// define a hidden 'scp' command (it implements server-side implementation of handling
 	// 'scp' requests)
 	scpc.Flag("t", "sink mode (data consumer)").Short('t').Default("false").BoolVar(&scpFlags.Sink)
@@ -622,6 +631,8 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 		err = onConfigureDiscoveryBootstrap(configureDiscoveryBootstrapFlags)
 	case systemdInstall.FullCommand():
 		err = onDumpSystemdUnitFile(systemdInstallFlags)
+	case teleportInstall.FullCommand():
+		err = onInstallTeleport(installTeleportFlags)
 	case discoveryBootstrapCmd.FullCommand():
 		configureDiscoveryBootstrapFlags.config.Service = configurators.DiscoveryService
 		err = onConfigureDiscoveryBootstrap(configureDiscoveryBootstrapFlags)
