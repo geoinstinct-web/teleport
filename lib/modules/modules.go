@@ -256,6 +256,7 @@ type AccessResourcesGetter interface {
 	ListResources(ctx context.Context, req proto.ListResourcesRequest) (*types.ListResourcesResponse, error)
 
 	GetAccessList(context.Context, string) (*accesslist.AccessList, error)
+	GetAccessLists(ctx context.Context) ([]*accesslist.AccessList, error)
 
 	ListAccessListMembers(ctx context.Context, accessList string, pageSize int, pageToken string) (members []*accesslist.AccessListMember, nextToken string, err error)
 	GetAccessListMember(ctx context.Context, accessList string, memberName string) (*accesslist.AccessListMember, error)
@@ -278,8 +279,11 @@ type AccessListSuggestionClient interface {
 type RoleGetter interface {
 	GetRole(ctx context.Context, name string) (types.Role, error)
 }
+
 type AccessListGetter interface {
 	GetAccessList(ctx context.Context, name string) (*accesslist.AccessList, error)
+	GetAccessLists(ctx context.Context) ([]*accesslist.AccessList, error)
+	GetAccessListMember(ctx context.Context, accessList string, memberName string) (*accesslist.AccessListMember, error)
 }
 
 // Modules defines interface that external libraries can implement customizing
