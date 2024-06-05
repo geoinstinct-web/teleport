@@ -148,7 +148,7 @@ func TryRun(commands []CLICommand, args []string) error {
 	app.Flag("debug", "Enable verbose logging to stderr").
 		Short('d').
 		BoolVar(&ccf.Debug)
-	app.Flag("config", fmt.Sprintf("Path to a configuration file [%v] for an auth service. Can also be set via the %v environment variable. Ignored if the auth_service is disabled.", defaults.ConfigFilePath, defaults.ConfigFileEnvar)).
+	app.Flag("config", fmt.Sprintf("Path to a configuration file [%v] for an Auth Service instance. Can also be set via the %v environment variable. Ignored if the auth_service is disabled.", defaults.ConfigFilePath, defaults.ConfigFileEnvar)).
 		Short('c').
 		ExistingFileVar(&ccf.ConfigFile)
 	app.Flag("config-string",
