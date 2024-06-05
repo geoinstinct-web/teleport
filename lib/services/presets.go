@@ -485,6 +485,19 @@ func NewPresetRequireTrustedDeviceRole() types.Role {
 				},
 				DatabaseNames: []string{types.Wildcard},
 				DatabaseUsers: []string{types.Wildcard},
+
+				// All apps (v17+).
+				AppLabels: types.Labels{
+					types.Wildcard: []string{types.Wildcard},
+				},
+
+				// All desktops (v17+).
+				WindowsDesktopLogins: []string{
+					"{{internal.windows_logins}}",
+				},
+				WindowsDesktopLabels: types.Labels{
+					types.Wildcard: []string{types.Wildcard},
+				},
 			},
 		},
 	}
