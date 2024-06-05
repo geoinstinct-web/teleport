@@ -393,7 +393,7 @@ func ApplyConfig(ccf *GlobalCLIFlags, cfg *servicecfg.Config) (*authclient.Confi
 		// The "admin" identity is not present? This means the tctl is running
 		// NOT on the auth server
 		if trace.IsNotFound(err) {
-			return nil, trace.AccessDenied("tctl must be used on an auth server host or provided with credentials by logging in with tsh first.")
+			return nil, trace.AccessDenied("tctl must be used on an Auth Service host or provided with credentials by logging in with tsh first.")
 		}
 		return nil, trace.Wrap(err)
 	}
