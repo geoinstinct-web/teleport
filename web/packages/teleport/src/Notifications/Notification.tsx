@@ -96,6 +96,27 @@ export function Notification({
     hideNotificationAttempt.status === 'processing' ||
     (view === 'Unread' && clicked)
   ) {
+    // If this is a text content notification, the dialog should still be renderable. This is to prevent the text content dialog immediately disappearing
+    // when trying to open an unread text notification, since clicking on the notification instantly marks it as read.
+    if (content.kind == 'text') {
+      return (
+        <Dialog open={showTextContentDialog} className={IGNORE_CLICK_CLASSNAME}>
+          <DialogHeader>
+            <DialogTitle>{content.title}</DialogTitle>
+          </DialogHeader>
+          <DialogContent>{content.textContent}</DialogContent>
+          <DialogFooter>
+            <ButtonSecondary
+              onClick={() => setShowTextContentDialog(false)}
+              size="small"
+              className={IGNORE_CLICK_CLASSNAME}
+            >
+              Close
+            </ButtonSecondary>
+          </DialogFooter>
+        </Dialog>
+      );
+    }
     return null;
   }
 
