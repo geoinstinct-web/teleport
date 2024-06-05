@@ -379,7 +379,7 @@ func ApplyConfig(ccf *GlobalCLIFlags, cfg *servicecfg.Config) (*authclient.Confi
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil, trace.Wrap(err, "Could not load Teleport host UUID file at %s. "+
-				"Please make sure that a Teleport auth service is running on this host prior to using tctl or provide credentials by logging in with tsh first.",
+				"Please make sure that a Teleport Auth Service instance is running on this host prior to using tctl or provide credentials by logging in with tsh first.",
 				filepath.Join(cfg.DataDir, utils.HostUUIDFile))
 		} else if errors.Is(err, fs.ErrPermission) {
 			return nil, trace.Wrap(err, "Teleport does not have permission to read Teleport host UUID file at %s. "+
