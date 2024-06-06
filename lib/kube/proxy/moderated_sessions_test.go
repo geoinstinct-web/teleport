@@ -49,7 +49,7 @@ import (
 
 func TestModeratedSessions(t *testing.T) {
 	// enable enterprise features to have access to ModeratedSessions.
-	modules.SetTestModules(t, &modules.TestModules{TestBuildType: modules.BuildEnterprise, TestFeatures: modules.Features{Kubernetes: true}})
+	modules.SetTestModules(t, &modules.TestModules{TestBuildType: modules.BuildEnterprise, TestFeatures: modules.Features{Kubernetes: modules.Entitlement{Enabled: true}}})
 	const (
 		moderatorUsername       = "moderator_user"
 		moderatorRoleName       = "mod_role"
@@ -496,7 +496,7 @@ func validateSessionTracker(testCtx *TestContext, sessionID string, reason strin
 // Lock watcher connection to be stale and it takes ~5 minutes to happen.
 func TestInteractiveSessionsNoAuth(t *testing.T) {
 	// enable enterprise features to have access to ModeratedSessions.
-	modules.SetTestModules(t, &modules.TestModules{TestBuildType: modules.BuildEnterprise, TestFeatures: modules.Features{Kubernetes: true}})
+	modules.SetTestModules(t, &modules.TestModules{TestBuildType: modules.BuildEnterprise, TestFeatures: modules.Features{Kubernetes: modules.Entitlement{Enabled: true}}})
 	const (
 		moderatorUsername       = "moderator_user"
 		moderatorRoleName       = "mod_role"

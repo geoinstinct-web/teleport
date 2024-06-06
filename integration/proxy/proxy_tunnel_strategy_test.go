@@ -158,7 +158,7 @@ func TestProxyTunnelStrategyProxyPeering(t *testing.T) {
 	// This test cannot run in parallel as set module changes the global state.
 	modules.SetTestModules(t, &modules.TestModules{
 		TestBuildType: modules.BuildEnterprise,
-		TestFeatures:  modules.Features{DB: true},
+		TestFeatures:  modules.Features{DB: modules.Entitlement{Enabled: true}},
 	})
 
 	p := newProxyTunnelStrategy(t, "proxy-tunnel-proxy-peer",

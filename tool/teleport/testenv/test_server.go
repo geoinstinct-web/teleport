@@ -36,6 +36,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ssh"
 
+	"github.com/gravitational/teleport"
 	"github.com/gravitational/teleport/api/breaker"
 	apidefaults "github.com/gravitational/teleport/api/defaults"
 	"github.com/gravitational/teleport/api/types"
@@ -411,9 +412,11 @@ func (p *cliModules) PrintVersion() {
 // Features returns supported features
 func (p *cliModules) Features() modules.Features {
 	return modules.Features{
-		Kubernetes:              true,
-		DB:                      true,
-		App:                     true,
+		Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+			teleport.K8s: {Enabled: true},
+			teleport.DB:  {Enabled: true},
+			teleport.App: {Enabled: true},
+		},
 		AdvancedAccessWorkflows: true,
 		AccessControls:          true,
 	}

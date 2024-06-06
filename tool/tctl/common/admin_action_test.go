@@ -953,8 +953,8 @@ func newAdminActionTestSuite(t *testing.T) *adminActionTestSuite {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestBuildType: modules.BuildEnterprise,
 		TestFeatures: modules.Features{
-			OIDC: true,
-			SAML: true,
+			OIDC: modules.Entitlement{Enabled: true},
+			SAML: modules.Entitlement{Enabled: true},
 		},
 	})
 

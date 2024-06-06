@@ -855,7 +855,9 @@ func TestGenerateUserCerts_deviceAuthz(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestBuildType: modules.BuildEnterprise, // required for Device Trust.
 		TestFeatures: modules.Features{
-			App: true,
+			Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+				teleport.App: {Enabled: true},
+			},
 		},
 	})
 
@@ -4187,7 +4189,11 @@ func TestExport(t *testing.T) {
 // a SAML connector.
 func TestSAMLValidation(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
-		TestFeatures: modules.Features{SAML: true},
+		TestFeatures: modules.Features{
+			Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+				teleport.SAML: {Enabled: true},
+			},
+		},
 	})
 
 	// minimal entity_descriptor to pass validation. not actually valid
@@ -4459,8 +4465,8 @@ func TestUpsertApplicationServerOrigin(t *testing.T) {
 func TestGetAccessGraphConfig(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			Policy: modules.PolicyFeature{
-				Enabled: true,
+			Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+				teleport.Policy: {Enabled: true},
 			},
 		},
 	})

@@ -76,7 +76,7 @@ func TestTshDB(t *testing.T) {
 		&modules.TestModules{
 			TestBuildType: modules.BuildEnterprise,
 			TestFeatures: modules.Features{
-				DB: true,
+				DB: modules.Entitlement{Enabled: true},
 			},
 		},
 	)
