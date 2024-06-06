@@ -1076,7 +1076,7 @@ func TestMongoDBMaxMessageSize(t *testing.T) {
 func TestAccessDisabled(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			DB: false,
+			DB: modules.Entitlement{Enabled: false},
 		},
 	})
 

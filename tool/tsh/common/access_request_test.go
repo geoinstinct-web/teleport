@@ -40,7 +40,7 @@ func TestAccessRequestSearch(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestBuildType: modules.BuildEnterprise,
 		TestFeatures: modules.Features{
-			Kubernetes: true,
+			Kubernetes: modules.Entitlement{Enabled: true},
 		},
 	},
 	)

@@ -345,17 +345,17 @@ func NewServer(cfg *InitConfig, opts ...ServerOption) (*Server, error) {
 	}
 
 	if cfg.KeyStoreConfig.PKCS11 != (keystore.PKCS11Config{}) {
-		if !modules.GetModules().Features().HSM {
+		if !modules.GetModules().Features().HSM.Enabled {
 			return nil, fmt.Errorf("PKCS11 HSM support requires a license with the HSM feature enabled: %w", ErrRequiresEnterprise)
 		}
 		cfg.KeyStoreConfig.PKCS11.HostUUID = cfg.HostUUID
 	} else if cfg.KeyStoreConfig.GCPKMS != (keystore.GCPKMSConfig{}) {
-		if !modules.GetModules().Features().HSM {
+		if !modules.GetModules().Features().HSM.Enabled {
 			return nil, fmt.Errorf("Google Cloud KMS support requires a license with the HSM feature enabled: %w", ErrRequiresEnterprise)
 		}
 		cfg.KeyStoreConfig.GCPKMS.HostUUID = cfg.HostUUID
 	} else if cfg.KeyStoreConfig.AWSKMS != (keystore.AWSKMSConfig{}) {
-		if !modules.GetModules().Features().HSM {
+		if !modules.GetModules().Features().HSM.Enabled {
 			return nil, fmt.Errorf("AWS KMS support requires a license with the HSM feature enabled: %w", ErrRequiresEnterprise)
 		}
 		cfg.KeyStoreConfig.AWSKMS.Cluster = cfg.ClusterName.GetClusterName()
@@ -5365,7 +5365,7 @@ func (a *Server) UpsertNode(ctx context.Context, server types.Server) (*types.Ke
 func enforceLicense(t string) error {
 	switch t {
 	case types.KindKubeServer, types.KindKubernetesCluster:
-		if !modules.GetModules().Features().Kubernetes {
+		if !modules.GetModules().Features().Kubernetes.Enabled {
 			return trace.AccessDenied(
 				"this Teleport cluster is not licensed for Kubernetes, please contact the cluster administrator")
 		}
@@ -6904,10 +6904,11 @@ func (a *Server) getAccessRequestMonthlyUsage(ctx context.Context) (int, error) 
 // If so, it returns an error. This is only applicable on usage-based billing plans.
 func (a *Server) verifyAccessRequestMonthlyLimit(ctx context.Context) error {
 	f := modules.GetModules().Features()
-	if f.IsLegacy() || f.IGSEnabled() {
-		return nil // unlimited
+	if !f.AccessRequests.Limited || f.AccessRequests.Limit == 0 {
+		return nil
 	}
-	monthlyLimit := f.AccessRequests.MonthlyRequestLimit
+
+	monthlyLimit := f.AccessRequests.Limit
 
 	const limitReachedMessage = "cluster has reached its monthly access request limit, please contact the cluster administrator"
 
@@ -6915,7 +6916,7 @@ func (a *Server) verifyAccessRequestMonthlyLimit(ctx context.Context) error {
 	if err != nil {
 		return trace.Wrap(err)
 	}
-	if usage >= monthlyLimit {
+	if usage >= int(monthlyLimit) {
 		return trace.AccessDenied(limitReachedMessage)
 	}
 

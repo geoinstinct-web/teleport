@@ -539,6 +539,13 @@ message Features {
   bool JoinActiveSessions = 33 [(gogoproto.jsontag) = "join_active_sessions,omitempty"];
   // MobileDeviceManagement indicates whether endpoint management (like Jamf Plugin) can be used in the cluster
   bool MobileDeviceManagement = 34 [(gogoproto.jsontag) = "mobile_device_management,omitempty"];
+  // todo mberg add additional features here? or no?
+  //    bool CloudAuditLogRetention = xx;
+  //    bool OktaSCIM = xx;
+  //    bool OktaUserSync = xx;
+  //    bool SessionLocks = xx;
+  //    bool UpsellAlert = xx;
+  //    bool UsageReporting = xx;
 }
 
 // DeviceTrustFeature holds the Device Trust feature general and usage-based

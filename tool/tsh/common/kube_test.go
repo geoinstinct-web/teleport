@@ -320,7 +320,7 @@ func TestKubeSelection(t *testing.T) {
 		&modules.TestModules{
 			TestBuildType: modules.BuildEnterprise,
 			TestFeatures: modules.Features{
-				Kubernetes: true,
+				Kubernetes: modules.Entitlement{Enabled: true},
 			},
 		},
 	)

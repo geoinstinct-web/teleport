@@ -265,7 +265,7 @@ func testClientCert(p *Pack, t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestBuildType: modules.BuildEnterprise,
 		TestFeatures: modules.Features{
-			App: true,
+			App: modules.Entitlement{Enabled: true},
 		},
 	})
 	evilUser, _ := p.CreateUser(t)

@@ -478,7 +478,7 @@ func TestAthenaAuditLogSetup(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
 			Cloud:                true,
-			ExternalAuditStorage: true,
+			ExternalAuditStorage: modules.Entitlement{Enabled: true},
 		},
 	})
 

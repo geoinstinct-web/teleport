@@ -33,7 +33,7 @@ import (
 func TestDesktopAccessDisabled(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			Desktop: false, // Explicily turn off desktop access.
+			Desktop: modules.Entitlement{Enabled: false}, // Explicitly turn off desktop access.
 		},
 	})
 

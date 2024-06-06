@@ -1167,9 +1167,9 @@ func newAccessListService(t *testing.T, mem *memory.Memory, clock clockwork.Cloc
 
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			IdentityGovernanceSecurity: igsEnabled,
-			AccessList: modules.AccessListFeature{
-				CreateLimit: 1,
+			Identity: modules.Entitlement{Enabled: igsEnabled},
+			AccessLists: modules.Entitlement{
+				Limit: 1,
 			},
 		},
 	})

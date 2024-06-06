@@ -4417,7 +4417,7 @@ func TestClusterAppsGet(t *testing.T) {
 func TestApplicationAccessDisabled(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			App: false,
+			App: modules.Entitlement{Enabled: false},
 		},
 	})
 
@@ -4677,13 +4677,13 @@ func TestGetWebConfig_IGSFeatureLimits(t *testing.T) {
 
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			ProductType:                modules.ProductTypeTeam,
-			IdentityGovernanceSecurity: true,
-			AccessList: modules.AccessListFeature{
-				CreateLimit: 5,
+			ProductType: modules.ProductTypeTeam,
+			Identity:    modules.Entitlement{Enabled: true},
+			AccessLists: modules.Entitlement{
+				Limit: 5,
 			},
-			AccessMonitoring: modules.AccessMonitoringFeature{
-				MaxReportRangeLimit: 10,
+			AccessMonitoring: modules.Entitlement{
+				Limit: 10,
 			},
 			IsUsageBasedBilling: true,
 			IsStripeManaged:     true,
