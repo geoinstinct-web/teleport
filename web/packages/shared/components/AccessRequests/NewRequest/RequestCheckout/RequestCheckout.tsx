@@ -38,7 +38,6 @@ import {
   Cross,
 } from 'design/Icon';
 import Table, { Cell } from 'design/DataTable';
-import { CheckboxInput, CheckboxWrapper } from 'design/Checkbox';
 import { Danger } from 'design/Alert';
 
 import Validation, { useRule, Validator } from 'shared/components/Validation';
@@ -60,6 +59,7 @@ import type { TransitionStatus } from 'react-transition-group';
 
 import type { AccessRequest } from 'shared/services/accessRequests';
 import type { ResourceKind } from '../resource';
+import { FieldCheckbox } from 'shared/components/FieldCheckbox';
 
 export function RequestCheckoutWithSlider<
   T extends PendingListItem = PendingListItem,
@@ -521,34 +521,17 @@ function ResourceRequestRoles({
       {fetchAttempt.status === 'success' && expanded && (
         <Box mt={2}>
           {roles.map((roleName, index) => {
-            const id = `${roleName}${index}`;
             return (
-              <CheckboxWrapper
+              <FieldCheckbox
                 key={index}
-                css={`
-                  width: 100%;
-                  cursor: pointer;
-                  background: ${({ theme }) => theme.colors.levels.surface};
-
-                  &:hover {
-                    border-color: ${({ theme }) =>
-                      theme.colors.levels.elevated};
-                  }
-                `}
-                as="label"
-                htmlFor={id}
-              >
-                <CheckboxInput
-                  type="checkbox"
-                  name={roleName}
-                  id={id}
-                  onChange={e => {
-                    onInputChange(roleName, e);
-                  }}
-                  checked={selectedRoles.includes(roleName)}
-                />
-                {roleName}
-              </CheckboxWrapper>
+                name={roleName}
+                onChange={e => {
+                  onInputChange(roleName, e);
+                }}
+                checked={selectedRoles.includes(roleName)}
+                label={roleName}
+                size="small"
+              />
             );
           })}
           {selectedRoles.length < roles.length && (

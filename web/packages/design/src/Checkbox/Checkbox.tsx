@@ -18,7 +18,7 @@
 
 import styled from 'styled-components';
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { Flex } from 'design';
 import { space } from 'design/system';
@@ -52,7 +52,7 @@ export const CheckboxInput = styled.input`
   ${space}
 `;
 
-type CheckboxSize = 'large' | 'small';
+export type CheckboxSize = 'large' | 'small';
 
 interface StyledCheckboxProps {
   size?: CheckboxSize;
@@ -80,7 +80,7 @@ interface StyledCheckboxProps {
 }
 
 // TODO (bl-nero): Make this the default checkbox
-export function StyledCheckbox(props: StyledCheckboxProps) {
+export const StyledCheckbox = forwardRef((props: StyledCheckboxProps, ref) => {
   const { style, className, size, ...inputProps } = props;
   return (
     // The outer wrapper and inner wrapper are separate to allow using
@@ -94,12 +94,12 @@ export function StyledCheckbox(props: StyledCheckboxProps) {
             because we want to be able to use this component both with and
             without surrounding labels. Instead, we use absolute positioning and
             an actually rendered input with a custom appearance. */}
-        <StyledCheckboxInternal cbSize={size} {...inputProps} />
+        <StyledCheckboxInternal ref={ref} cbSize={size} {...inputProps} />
         <Checkmark />
       </InnerWrapper>
     </OuterWrapper>
   );
-}
+});
 
 const OuterWrapper = styled.span`
   line-height: 0;

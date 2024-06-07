@@ -47,6 +47,7 @@ import { splitAwsIamArn } from 'teleport/services/integrations/aws';
 import { EditableIntegrationFields } from './Operations/useIntegrationOperation';
 import { S3BucketConfiguration } from './Enroll/AwsOidc/S3BucketConfiguration';
 import { S3BucketWarningBanner } from './Enroll/AwsOidc/S3BucketWarningBanner';
+import { FieldCheckbox } from 'shared/components/FieldCheckbox';
 
 type Props = {
   close(): void;
@@ -207,19 +208,15 @@ export function EditAwsOidcIntegrationDialog(props: Props) {
           </DialogContent>
           <DialogFooter>
             {showGenerateCommand && scriptUrl && (
-              <Box mb={1}>
-                <CheckboxInput
-                  role="checkbox"
-                  type="checkbox"
-                  name="checkbox"
-                  data-testid="checkbox"
-                  checked={confirmed}
-                  onChange={e => {
-                    setConfirmed(e.target.checked);
-                  }}
-                />
-                I ran the command
-              </Box>
+              <FieldCheckbox
+                label="I ran the command"
+                name="checkbox"
+                data-testid="checkbox"
+                checked={confirmed}
+                onChange={e => {
+                  setConfirmed(e.target.checked);
+                }}
+              />
             )}
 
             {requiresS3BucketWarning && showS3BucketWarning ? (

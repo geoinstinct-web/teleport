@@ -28,6 +28,7 @@ import cfg from 'teleport/config';
 
 import useLogin, { State } from './useLogin';
 import Motd from './Motd';
+import { FieldCheckbox } from 'shared/components/FieldCheckbox';
 
 export function Login() {
   const state = useLogin();
@@ -124,24 +125,26 @@ function LicenseAcknowledgement({
           </Link>{' '}
           to evaluate and use Teleport.
         </InfoText>
-        <Flex as="label" mt={3} gap={2} alignItems="center">
-          <StyledCheckbox
-            checked={checked}
-            onChange={e => {
-              setChecked(e.target.checked);
-            }}
-          />
-          <Text>
-            By clicking continue, you agree to our{' '}
-            <Link
-              href="https://github.com/gravitational/teleport/blob/master/LICENSE-community"
-              target="_blank"
-            >
-              Terms and Conditions
-            </Link>
-            .
-          </Text>
-        </Flex>
+        <FieldCheckbox
+          mt={3}
+          mb={0}
+          checked={checked}
+          onChange={e => {
+            setChecked(e.target.checked);
+          }}
+          label={
+            <>
+              By clicking continue, you agree to our{' '}
+              <Link
+                href="https://github.com/gravitational/teleport/blob/master/LICENSE-community"
+                target="_blank"
+              >
+                Terms and Conditions
+              </Link>
+              .
+            </>
+          }
+        />
         <ButtonPrimary
           disabled={!checked}
           onClick={() => {
