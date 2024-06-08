@@ -109,14 +109,14 @@ func TestConnect(t *testing.T) {
 				ConfigFile: mustWriteFileConfig(t, fileConfigAgent),
 				Insecure:   true,
 			},
-			wantErrContains: "make sure that a Teleport auth service is running",
+			wantErrContains: "make sure that a Teleport Auth Service instance is running",
 		}, {
 			name: "ignores agent config file string",
 			cliFlags: GlobalCLIFlags{
 				ConfigString: mustGetBase64EncFileConfig(t, fileConfigAgent),
 				Insecure:     true,
 			},
-			wantErrContains: "make sure that a Teleport auth service is running",
+			wantErrContains: "make sure that a Teleport Auth Service instance is running",
 		}, {
 			name: "ignores agent config file and loads identity file",
 			cliFlags: GlobalCLIFlags{
