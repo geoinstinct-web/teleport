@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// package modules allows external packages override certain behavioral
+// Package modules allows external packages override certain behavioral
 // aspects of teleport
 package modules
 
@@ -45,22 +45,86 @@ import (
 
 // Features provides supported and unsupported features
 type Features struct {
-	// Kubernetes enables Kubernetes Access product
-	Kubernetes bool
+	// --------------- Cloud Settings
+	// Cloud enables some cloud-related features
+	Cloud bool
+	// CustomTheme holds the name of WebUI custom theme.
+	CustomTheme string
+	// IsStripeManaged indicates if the cluster billing is managed via Stripe
+	IsStripeManaged bool
+	// IsUsageBasedBilling enables some usage-based billing features
+	IsUsageBasedBilling bool
+	// Questionnaire indicates whether cluster users should get an onboarding questionnaire
+	Questionnaire bool
+	// SupportType indicates the type of customer's support
+	SupportType proto.SupportType
+
+	// --------------- Cloud Entitlements
+	// AccessList holds its namesake feature settings.
+	AccessLists Entitlement
+	// AccessMonitoring holds its namesake feature settings.
+	AccessMonitoring Entitlement
+	// AccessRequests holds its namesake feature settings.
+	AccessRequests Entitlement
 	// App enables Application Access product
-	App bool
+	App Entitlement
+	// CloudAuditLogRetention holds its namesake feature settings.
+	CloudAuditLogRetention Entitlement
 	// DB enables database access product
-	DB bool
+	DB Entitlement
+	// Desktop enables desktop access product
+	Desktop Entitlement
+	// DeviceTrust holds its namesake feature settings.
+	DeviceTrust Entitlement
+	// ExternalAuditStorage indicates whether the EAS feature is enabled in the cluster.
+	ExternalAuditStorage Entitlement
+	// FeatureHiding enables hiding features from being discoverable for users who don't have the necessary permissions.
+	FeatureHiding Entitlement
+	// HSM enables PKCS#11 HSM support
+	HSM Entitlement
+	// Identity indicates whether IGS related features are enabled
+	// todo (michellescripts) deprecate in favor of individual entitlements
+	Identity Entitlement
+	// JoinActiveSessions indicates whether joining active sessions via web UI is enabled
+	JoinActiveSessions Entitlement
+	// Kubernetes enables Kubernetes Access product
+	Kubernetes Entitlement
+	// MobileDeviceManagement indicates whether endpoints management (like Jamf Plugin) can be used in the cluster`
+	MobileDeviceManagement Entitlement
 	// OIDC enables OIDC connectors
-	OIDC bool
+	OIDC Entitlement
+	// OktaSCIM enables Okta SCIM
+	OktaSCIM Entitlement
+	//OktaUserSync enables Okta User Sync
+	OktaUserSync Entitlement
+	// Policy holds settings for the Teleport Policy feature set: includes Teleport Access Graph (TAG).
+	Policy Entitlement
 	// SAML enables SAML connectors
-	SAML bool
+	SAML Entitlement
+	// SessionLocks ...
+	SessionLocks Entitlement
+	// UpsellAlert is a boolean entitlement that will trigger a cluster alert banner "CTA" for trial plans if true
+	UpsellAlert Entitlement
+	// UsageReporting ...
+	UsageReporting Entitlement
+
+	// --------------- Deprecated Fields
 	// AccessControls enables FIPS access controls
+	// Deprecated
 	AccessControls bool
+	// Assist enables Assistant feature
+	// Deprecated
+	Assist bool
+	// ProductType describes the product being used.
+	// Avoid field; Use entitlements and settings
+	// Deprecated
+	ProductType ProductType
+
+	// todo (michellescripts) have the following fields evaluated for deprecation, consolidation, or fetched from Cloud
 	// Currently this flag is to gate actions from OSS clusters.
 	//
 	// Determining support for access request is currently determined by:
-	//   1) Enterprise + [Features.IdentityGovernanceSecurity] == true, new flag
+	//   1) Enterprise + [Features.Identity] == true, new flag
 	//   introduced with Enterprise Usage Based (EUB) product.
 	//   2) Enterprise + [Features.IsUsageBasedBilling] == false, legacy support
 	//   where before EUB, it was unlimited.
@@ -69,71 +133,34 @@ type Features struct {
 	// enterprise editions (team, cloud, on-prem). Historically, access request
 	// was only available for enterprise cloud and enterprise on-prem.
 	AdvancedAccessWorkflows bool
-	// Cloud enables some cloud-related features
-	Cloud bool
-	// HSM enables PKCS#11 HSM support
-	HSM bool
-	// Desktop enables desktop access product
-	Desktop bool
 	// RecoveryCodes enables account recovery codes
 	RecoveryCodes bool
 	// Plugins enables hosted plugins
 	Plugins bool
 	// AutomaticUpgrades enables automatic upgrades of agents/services.
 	AutomaticUpgrades bool
-	// IsUsageBasedBilling enables some usage-based billing features
-	IsUsageBasedBilling bool
-	// Assist enables Assistant feature
-	Assist bool
-	// DeviceTrust holds its namesake feature settings.
-	DeviceTrust DeviceTrustFeature
-	// FeatureHiding enables hiding features from being discoverable for users who don't have the necessary permissions.
-	FeatureHiding bool
-	// AccessRequests holds its namesake feature settings.
-	AccessRequests AccessRequestsFeature
-	// CustomTheme holds the name of WebUI custom theme.
-	CustomTheme string
-
 	// AccessGraph enables the usage of access graph.
 	// NOTE: this is a legacy flag that is currently used to signal
 	// that Access Graph integration is *enabled* on a cluster.
 	// *Access* to the feature is gated on the `Policy` flag.
 	// TODO(justinas): remove this field once "TAG enabled" status is moved to a resource in the backend.
 	AccessGraph bool
-	// IdentityGovernanceSecurity indicates whether IGS related features are enabled:
-	// access list, access request, access monitoring, device trust.
-	IdentityGovernanceSecurity bool
-	// AccessList holds its namesake feature settings.
-	AccessList AccessListFeature
-	// AccessMonitoring holds its namesake feature settings.
-	AccessMonitoring AccessMonitoringFeature
-	// ProductType describes the product being used.
-	ProductType ProductType
-	// Policy holds settings for the Teleport Policy feature set.
-	// At the time of writing, this includes Teleport Access Graph (TAG).
-	Policy PolicyFeature
-	// Questionnaire indicates whether cluster users should get an onboarding questionnaire
-	Questionnaire bool
-	// IsStripeManaged indicates if the cluster billing is managed via Stripe
-	IsStripeManaged bool
-	// ExternalAuditStorage indicates whether the EAS feature is enabled in the cluster.
-	ExternalAuditStorage bool
-	// SupportType indicates the type of customer's support
-	SupportType proto.SupportType
-	// JoinActiveSessions indicates whether joining active sessions via web UI is enabled
-	JoinActiveSessions bool
-	// MobileDeviceManagement indicates whether endpoints management (like Jamf Plugin) can be used in the cluster
-	MobileDeviceManagement bool
+}
+
+type Entitlement struct {
+	Enabled bool
+	Limited bool
+	Limit   int32
 }
 
 // DeviceTrustFeature holds the Device Trust feature general and usage-based
 // settings.
-// Limits have no affect if [Feature.IdentityGovernanceSecurity] is enabled.
+// Limits have no affect if [Feature.Identity] is enabled.
 type DeviceTrustFeature struct {
 	// Currently this flag is to gate actions from OSS clusters.
 	//
 	// Determining support for device trust is currently determined by:
-	//   1) Enterprise + [Features.IdentityGovernanceSecurity] == true, new flag
+	//   1) Enterprise + [Features.Identity] == true, new flag
 	//   introduced with Enterprise Usage Based (EUB) product.
 	//   2) Enterprise + [Features.IsUsageBasedBilling] == false, legacy support
 	//   where before EUB, it was unlimited.
@@ -143,82 +170,54 @@ type DeviceTrustFeature struct {
 	DevicesUsageLimit int
 }
 
-// AccessRequestsFeature holds the Access Requests feature general and usage-based settings.
-// Limits have no affect if [Feature.IdentityGovernanceSecurity] is enabled.
-type AccessRequestsFeature struct {
-	// MonthlyRequestLimit is the usage-based limit for the number of
-	// access requests created in a calendar month.
-	MonthlyRequestLimit int
-}
-
-// AccessListFeature holds the Access List feature settings.
-// Limits have no affect if feature is enabled.
-type AccessListFeature struct {
-	// Limit for the number of access list creatable when feature is
-	// not enabled.
-	CreateLimit int
-}
-
-// AccessMonitoring holds the Access Monitoring feature settings.
-// Limits have no affect if [Feature.IdentityGovernanceSecurity] is enabled.
-type AccessMonitoringFeature struct {
-	// True if enabled in the auth service config: [auth_service.access_monitoring.enabled].
-	Enabled bool
-	// Defines the max number of days to include in an access report.
-	MaxReportRangeLimit int
-}
-
-type PolicyFeature struct {
-	// Enabled is set to `true` if Teleport Policy is enabled in the license.
-	Enabled bool
-}
-
 // ToProto converts Features into proto.Features
 func (f Features) ToProto() *proto.Features {
 	return &proto.Features{
-		ProductType:             proto.ProductType(f.ProductType),
-		Kubernetes:              f.Kubernetes,
-		App:                     f.App,
-		DB:                      f.DB,
-		OIDC:                    f.OIDC,
-		SAML:                    f.SAML,
-		AccessControls:          f.AccessControls,
-		AdvancedAccessWorkflows: f.AdvancedAccessWorkflows,
-		Cloud:                   f.Cloud,
-		HSM:                     f.HSM,
-		Desktop:                 f.Desktop,
-		RecoveryCodes:           f.RecoveryCodes,
-		Plugins:                 f.Plugins,
-		AutomaticUpgrades:       f.AutomaticUpgrades,
-		IsUsageBased:            f.IsUsageBasedBilling,
-		Assist:                  f.Assist,
-		FeatureHiding:           f.FeatureHiding,
-		CustomTheme:             f.CustomTheme,
-		AccessGraph:             f.AccessGraph,
-		DeviceTrust: &proto.DeviceTrustFeature{
-			Enabled:           f.DeviceTrust.Enabled,
-			DevicesUsageLimit: int32(f.DeviceTrust.DevicesUsageLimit),
+		// Settings
+		Cloud:           f.Cloud,
+		CustomTheme:     f.CustomTheme,
+		IsStripeManaged: f.IsStripeManaged,
+		IsUsageBased:    f.IsUsageBasedBilling,
+		Questionnaire:   f.Questionnaire,
+		SupportType:     f.SupportType,
+
+		// todo (michellescripts) update this api to use new entitlements; typed as Entitlement
+		AccessList: &proto.AccessListFeature{
+			CreateLimit: f.AccessLists.Limit,
 		},
-		AccessRequests: &proto.AccessRequestsFeature{
-			MonthlyRequestLimit: int32(f.AccessRequests.MonthlyRequestLimit),
-		},
-		IdentityGovernance: f.IdentityGovernanceSecurity,
 		AccessMonitoring: &proto.AccessMonitoringFeature{
 			Enabled:             f.AccessMonitoring.Enabled,
-			MaxReportRangeLimit: int32(f.AccessMonitoring.MaxReportRangeLimit),
+			MaxReportRangeLimit: f.AccessMonitoring.Limit,
 		},
-		AccessList: &proto.AccessListFeature{
-			CreateLimit: int32(f.AccessList.CreateLimit),
+		AccessRequests: &proto.AccessRequestsFeature{
+			MonthlyRequestLimit: f.AccessRequests.Limit,
 		},
-		Policy: &proto.PolicyFeature{
-			Enabled: f.Policy.Enabled,
+		DeviceTrust: &proto.DeviceTrustFeature{
+			Enabled:           f.DeviceTrust.Enabled,
+			DevicesUsageLimit: f.DeviceTrust.Limit,
 		},
-		Questionnaire:          f.Questionnaire,
-		IsStripeManaged:        f.IsStripeManaged,
-		ExternalAuditStorage:   f.ExternalAuditStorage,
-		SupportType:            f.SupportType,
-		JoinActiveSessions:     f.JoinActiveSessions,
-		MobileDeviceManagement: f.MobileDeviceManagement,
+
+		AccessControls:          f.AccessControls,
+		AccessGraph:             f.AccessGraph,
+		AdvancedAccessWorkflows: f.AdvancedAccessWorkflows,
+		App:                     f.App.Enabled,
+		Assist:                  f.Assist,
+		AutomaticUpgrades:       f.AutomaticUpgrades,
+		DB:                      f.DB.Enabled,
+		Desktop:                 f.Desktop.Enabled,
+		ExternalAuditStorage:    f.ExternalAuditStorage.Enabled,
+		FeatureHiding:           f.FeatureHiding.Enabled,
+		HSM:                     f.HSM.Enabled,
+		IdentityGovernance:      f.Identity.Enabled,
+		JoinActiveSessions:      f.JoinActiveSessions.Enabled,
+		Kubernetes:              f.Kubernetes.Enabled,
+		MobileDeviceManagement:  f.MobileDeviceManagement.Enabled,
+		OIDC:                    f.OIDC.Enabled,
+		Plugins:                 f.Plugins,
+		Policy:                  &proto.PolicyFeature{Enabled: f.Policy.Enabled},
+		ProductType:             proto.ProductType(f.ProductType),
+		RecoveryCodes:           f.RecoveryCodes,
+		SAML:                    f.SAML.Enabled,
 	}
 }
 
@@ -232,23 +231,6 @@ const (
 	// ProductTypeEUB is Teleport Enterprise Usage Based product.
 	ProductTypeEUB ProductType = 2
 )
-
-// IsLegacy describes the legacy enterprise product that existed before the
-// usage-based product was introduced. Some features (Device Trust, for example)
-// require the IGS add-on in usage-based products but are included for legacy
-// licenses.
-func (f Features) IsLegacy() bool {
-	return !f.IsUsageBasedBilling
-}
-
-func (f Features) IGSEnabled() bool {
-	return f.IdentityGovernanceSecurity
-}
-
-// TODO(mcbattirola): remove isTeam when it is no longer used
-func (f Features) IsTeam() bool {
-	return f.ProductType == ProductTypeTeam
-}
 
 // AccessResourcesGetter is a minimal interface that is used to get access lists
 // and related resources from the backend.
@@ -408,14 +390,15 @@ func (p *defaultModules) Features() Features {
 	})
 
 	return Features{
-		Kubernetes:         true,
-		DB:                 true,
-		App:                true,
-		Desktop:            true,
-		AutomaticUpgrades:  p.automaticUpgrades,
-		Assist:             true,
-		JoinActiveSessions: true,
-		SupportType:        proto.SupportType_SUPPORT_TYPE_FREE,
+		Assist:            true,
+		AutomaticUpgrades: p.automaticUpgrades,
+		SupportType:       proto.SupportType_SUPPORT_TYPE_FREE,
+
+		App:                Entitlement{Enabled: true, Limited: false},
+		DB:                 Entitlement{Enabled: true, Limited: false},
+		Desktop:            Entitlement{Enabled: true, Limited: false},
+		JoinActiveSessions: Entitlement{Enabled: true, Limited: false},
+		Kubernetes:         Entitlement{Enabled: true, Limited: false},
 	}
 }
 

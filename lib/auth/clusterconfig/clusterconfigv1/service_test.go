@@ -1798,7 +1798,7 @@ func TestGetAccessGraphConfig(t *testing.T) {
 			testSetup: func(t *testing.T) {
 				m := modules.TestModules{
 					TestFeatures: modules.Features{
-						Policy: modules.PolicyFeature{
+						Policy: modules.Entitlement{
 							Enabled: true,
 						},
 					},
@@ -1822,7 +1822,7 @@ func TestGetAccessGraphConfig(t *testing.T) {
 			testSetup: func(t *testing.T) {
 				m := modules.TestModules{
 					TestFeatures: modules.Features{
-						Policy: modules.PolicyFeature{
+						Policy: modules.Entitlement{
 							Enabled: true,
 						},
 					},

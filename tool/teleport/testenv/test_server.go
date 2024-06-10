@@ -411,9 +411,9 @@ func (p *cliModules) PrintVersion() {
 // Features returns supported features
 func (p *cliModules) Features() modules.Features {
 	return modules.Features{
-		Kubernetes:              true,
-		DB:                      true,
-		App:                     true,
+		Kubernetes:              modules.Entitlement{Enabled: true},
+		DB:                      modules.Entitlement{Enabled: true},
+		App:                     modules.Entitlement{Enabled: true},
 		AdvancedAccessWorkflows: true,
 		AccessControls:          true,
 	}

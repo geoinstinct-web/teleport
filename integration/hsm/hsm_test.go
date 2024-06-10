@@ -55,7 +55,7 @@ func TestMain(m *testing.M) {
 	modules.SetModules(&modules.TestModules{
 		TestBuildType: modules.BuildEnterprise,
 		TestFeatures: modules.Features{
-			HSM: true,
+			HSM: modules.Entitlement{Enabled: true},
 		},
 	})
 

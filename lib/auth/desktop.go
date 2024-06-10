@@ -35,7 +35,7 @@ import (
 // GenerateWindowsDesktopCert generates client certificate for Windows RDP
 // authentication.
 func (a *Server) GenerateWindowsDesktopCert(ctx context.Context, req *proto.WindowsDesktopCertRequest) (*proto.WindowsDesktopCertResponse, error) {
-	if !modules.GetModules().Features().Desktop {
+	if !modules.GetModules().Features().Desktop.Enabled {
 		return nil, trace.AccessDenied(
 			"this Teleport cluster is not licensed for desktop access, please contact the cluster administrator")
 	}
