@@ -969,10 +969,12 @@ func NewTeleport(cfg *servicecfg.Config) (*TeleportProcess, error) {
 		imClient, err = cloud.DiscoverInstanceMetadata(supervisor.ExitContext())
 		if err == nil {
 			cfg.Logger.InfoContext(supervisor.ExitContext(),
-				"Found an instance metadata service. Teleport will import labels from this cloud instance.",
+				"Found an instance metadata service. Teleport will import labels from this cloud instance",
 				"type", imClient.GetType())
 		} else if !trace.IsNotFound(err) {
-			cfg.Logger.ErrorContext(supervisor.ExitContext(), "Error looking for cloud instance metadata.", "error", err)
+			cfg.Logger.ErrorContext(supervisor.ExitContext(), "Error looking for cloud instance metadata", "error", err)
+			// Keep going. Not being able to fetch labels isn't necessarily an error (e.g. the user doesn't need imported
+			// labels and hasn't configured their cloud instance for it).
 		}
 	}
 
@@ -981,15 +983,16 @@ func NewTeleport(cfg *servicecfg.Config) (*TeleportProcess, error) {
 		if err == nil {
 			cloudHostname = strings.ReplaceAll(cloudHostname, " ", "_")
 			if utils.IsValidHostname(cloudHostname) {
-				cfg.Logger.InfoContext(supervisor.ExitContext(), "Overriding hostname with value from cloud tag TeleportHostname.", "hostname", cloudHostname)
+				cfg.Logger.InfoContext(supervisor.ExitContext(), "Overriding hostname with value from cloud tag TeleportHostname", "hostname", cloudHostname)
 				cfg.Hostname = cloudHostname
 
 				// cloudHostname exists but is not a valid hostname.
 			} else if cloudHostname != "" {
-				cfg.Logger.InfoContext(supervisor.ExitContext(), "Found invalid hostname in cloud tag TeleportHostname.", "hostname", cloudHostname)
+				cfg.Logger.InfoContext(supervisor.ExitContext(), "Found invalid hostname in cloud tag TeleportHostname", "hostname", cloudHostname)
 			}
 		} else if !trace.IsNotFound(err) {
-			cfg.Logger.ErrorContext(supervisor.ExitContext(), "Error looking for hostname tag.", "error", err)
+			cfg.Logger.ErrorContext(supervisor.ExitContext(), "Error looking for hostname tag", "error", err)
+			// Keep going.
 		}
 
 		cloudLabels, err = labels.NewCloudImporter(supervisor.ExitContext(), &labels.CloudConfig{
@@ -997,7 +1000,8 @@ func NewTeleport(cfg *servicecfg.Config) (*TeleportProcess, error) {
 			Clock:  cfg.Clock,
 		})
 		if err != nil {
-			cfg.Logger.ErrorContext(supervisor.ExitContext(), "Cloud labels will not be imported.", "error", err)
+			cfg.Logger.ErrorContext(supervisor.ExitContext(), "Cloud labels will not be imported", "error", err)
+			// Keep going.
 		}
 	}
 

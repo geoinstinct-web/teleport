@@ -76,8 +76,8 @@ func NewInstanceMetadataClient(ctx context.Context) (*InstanceMetadataClient, er
 
 // IsAvailable checks if instance metadata is available.
 func (client *InstanceMetadataClient) IsAvailable(ctx context.Context) bool {
-	id, err := client.getNumericID(ctx)
-	return err == nil && id != 0
+	_, err := client.getNumericID(ctx)
+	return err == nil
 }
 
 func (client *InstanceMetadataClient) getNumericID(ctx context.Context) (uint64, error) {
@@ -86,7 +86,7 @@ func (client *InstanceMetadataClient) getNumericID(ctx context.Context) (uint64,
 		return 0, trace.Wrap(err)
 	}
 	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
+	if err != nil || id == 0 {
 		return 0, trace.BadParameter("Invalid instance ID %q", idStr)
 	}
 	return id, nil

@@ -78,6 +78,13 @@ func TestIsInstanceMetadataAvailable(t *testing.T) {
 			assert: require.False,
 		},
 		{
+			name: "zero ID",
+			getMetadata: func(ctx context.Context, path string) (string, error) {
+				return "0", nil
+			},
+			assert: require.False,
+		},
+		{
 			name: "on mocked gcp",
 			getMetadata: func(ctx context.Context, path string) (string, error) {
 				return "12345678", nil
