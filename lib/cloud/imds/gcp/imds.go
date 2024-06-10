@@ -87,7 +87,7 @@ func (client *InstanceMetadataClient) getNumericID(ctx context.Context) (uint64,
 	}
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		return 0, trace.Wrap(err)
+		return 0, trace.BadParameter("Invalid instance ID %q", idStr)
 	}
 	return id, nil
 }
