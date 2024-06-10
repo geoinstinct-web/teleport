@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -49,6 +50,8 @@ type ACLCommand struct {
 
 	// Used for managing a particular access list.
 	accessListName string
+	// Used to add an access list to another one
+	isRefAcl bool
 
 	// Used for managing membership to an access list.
 	userName string
@@ -70,6 +73,7 @@ func (c *ACLCommand) Initialize(app *kingpin.Application, _ *servicecfg.Config) 
 	users := acl.Command("users", "Manage user membership to access lists.")
 
 	c.usersAdd = users.Command("add", "Add a user to an access list.")
+	c.usersAdd.Flag("refacl", "Add a reference to an access list to another access list").BoolVar(&c.isRefAcl)
 	c.usersAdd.Arg("access-list-name", "The access list name.").Required().StringVar(&c.accessListName)
 	c.usersAdd.Arg("user", "The user to add to the access list.").Required().StringVar(&c.userName)
 	c.usersAdd.Arg("expires", "When the user's access expires (must be in RFC3339). Defaults to the expiration time of the access list.").StringVar(&c.expires)
@@ -78,6 +82,7 @@ func (c *ACLCommand) Initialize(app *kingpin.Application, _ *servicecfg.Config) 
 	c.usersRemove = users.Command("rm", "Remove a user from an access list.")
 	c.usersRemove.Arg("access-list-name", "The access list name.").Required().StringVar(&c.accessListName)
 	c.usersRemove.Arg("user", "The user to remove from the access list.").Required().StringVar(&c.userName)
+	c.usersRemove.Flag("refacl", "Add a reference to an access list to another access list").BoolVar(&c.isRefAcl)
 
 	c.usersList = users.Command("ls", "List users that are members of an access list.")
 	c.usersList.Arg("access-list-name", "The access list name.").Required().StringVar(&c.accessListName)
@@ -150,6 +155,19 @@ func (c *ACLCommand) UsersAdd(ctx context.Context, client *authclient.Client) er
 		}
 	}
 
+	if c.isRefAcl {
+		acl, err := client.AccessListClient().GetAccessList(ctx, c.accessListName)
+		if err != nil {
+			return trace.Wrap(err)
+		}
+		acl.Spec.DynamicMembers.AccessLists = append(acl.Spec.DynamicMembers.AccessLists, c.userName)
+		if _, err := client.AccessListClient().UpsertAccessList(ctx, acl); err != nil {
+			return trace.Wrap(err)
+		}
+		fmt.Printf("successfully added user list %s to access list %s", c.userName, c.accessListName)
+		return nil
+	}
+
 	member, err := accesslist.NewAccessListMember(header.Metadata{
 		Name: c.userName,
 	}, accesslist.AccessListMemberSpec{
@@ -178,6 +196,21 @@ func (c *ACLCommand) UsersAdd(ctx context.Context, client *authclient.Client) er
 
 // UsersRemove will remove a user to an access list.
 func (c *ACLCommand) UsersRemove(ctx context.Context, client *authclient.Client) error {
+	if c.isRefAcl {
+		acl, err := client.AccessListClient().GetAccessList(ctx, c.accessListName)
+		if err != nil {
+			return trace.Wrap(err)
+		}
+		acl.Spec.DynamicMembers.AccessLists = slices.DeleteFunc(acl.Spec.DynamicMembers.AccessLists, func(e string) bool {
+			return e == c.userName
+		})
+		if _, err := client.AccessListClient().UpsertAccessList(ctx, acl); err != nil {
+			return trace.Wrap(err)
+		}
+		fmt.Printf("successfully removed user access list %s from access list %s", c.userName, c.accessListName)
+		return nil
+	}
+
 	err := client.AccessListClient().DeleteAccessListMember(ctx, c.accessListName, c.userName)
 	if err != nil {
 		return trace.Wrap(err)
@@ -197,23 +230,34 @@ func (c *ACLCommand) UsersList(ctx context.Context, client *authclient.Client) e
 
 	if len(members) == 0 {
 		fmt.Printf("No members found for access list %s.\nYou may not have access to see the members for this list.\n", c.accessListName)
-		return nil
+	} else {
+		fmt.Printf("Members of %s:\n", c.accessListName)
+		for {
+			for _, member := range members {
+				fmt.Printf("- %s\n", member.Spec.Name)
+			}
+
+			if nextToken == "" {
+				break
+			}
+
+			members, nextToken, err = client.AccessListClient().ListAccessListMembers(ctx, c.accessListName, 0, nextToken)
+			if err != nil {
+				return trace.Wrap(err)
+			}
+		}
 	}
 
-	fmt.Printf("Members of %s:\n", c.accessListName)
-	for {
-		for _, member := range members {
-			fmt.Printf("- %s\n", member.Spec.Name)
-		}
-
-		if nextToken == "" {
-			break
-		}
-
-		members, nextToken, err = client.AccessListClient().ListAccessListMembers(ctx, c.accessListName, 0, nextToken)
-		if err != nil {
-			return trace.Wrap(err)
-		}
+	acl, err := client.AccessListClient().GetAccessList(ctx, c.accessListName)
+	if err != nil {
+		return trace.Wrap(err)
+	}
+	if len(acl.Spec.DynamicMembers.AccessLists) == 0 {
+		return nil
+	}
+	fmt.Printf("Including members in %s from:\n", c.accessListName)
+	for _, memberAcl := range acl.Spec.DynamicMembers.AccessLists {
+		fmt.Printf("- access list %s\n", memberAcl)
 	}
 
 	return nil
@@ -234,13 +278,16 @@ func displayAccessLists(format string, accessLists ...*accesslist.AccessList) er
 }
 
 func displayAccessListsText(accessLists ...*accesslist.AccessList) error {
-	table := asciitable.MakeTable([]string{"ID", "Review Frequency", "Review Day Of Month", "Granted Roles", "Granted Traits"})
+	table := asciitable.MakeTable([]string{"ID", "Review Frequency", "Review Day Of Month", "Granted Roles", "Granted Traits", "Referenced Member Lists", "Referenced Owner Lists"})
 	for _, accessList := range accessLists {
 		grantedRoles := strings.Join(accessList.GetGrants().Roles, ",")
 		traitStrings := make([]string, 0, len(accessList.GetGrants().Traits))
 		for k, values := range accessList.GetGrants().Traits {
 			traitStrings = append(traitStrings, fmt.Sprintf("%s:{%s}", k, strings.Join(values, ",")))
 		}
+		memberAccessLists := strings.Join(accessList.Spec.DynamicMembers.AccessLists, ", ")
+		ownerAccessLists := strings.Join(accessList.Spec.DynamicOwners.AccessLists, ", ")
+
 		grantedTraits := strings.Join(traitStrings, ",")
 		table.AddRow([]string{
 			accessList.GetName(),
@@ -248,6 +295,9 @@ func displayAccessListsText(accessLists ...*accesslist.AccessList) error {
 			accessList.Spec.Audit.Recurrence.DayOfMonth.String(),
 			grantedRoles,
 			grantedTraits,
+			// todo(amk): include inherited granted roles/traits
+			memberAccessLists,
+			ownerAccessLists,
 		})
 	}
 	_, err := fmt.Println(table.AsBuffer().String())

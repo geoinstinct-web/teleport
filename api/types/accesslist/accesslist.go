@@ -155,6 +155,14 @@ type Spec struct {
 
 	// OwnerGrants describes the access granted by ownership of this access list.
 	OwnerGrants Grants `json:"owner_grants" yaml:"owner_grants"`
+
+	// MemberAccessLists is a list of AccessList ids that user membership
+	// should be fetched from
+	DynamicMembers DynamicAccessListMembers `json:"dynamic_members" yaml:"dynamic_members"`
+
+	// OwnerAccessLists is a list of AccessLists that owner membership
+	// should be fetched from
+	DynamicOwners DynamicAccessListMembers `json:"dynamic_owners" yaml:"dynamic_owners"`
 }
 
 // Owner is an owner of an access list.
@@ -225,6 +233,10 @@ type Grants struct {
 type Status struct {
 	// MemberCount is the number of members in the access list.
 	MemberCount *uint32
+}
+
+type DynamicAccessListMembers struct {
+	AccessLists []string `json:"access_lists" yaml:"access_lists"`
 }
 
 // NewAccessList will create a new access list.
