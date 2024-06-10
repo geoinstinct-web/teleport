@@ -92,8 +92,7 @@ func (client *InstanceMetadataClient) getNumericID(ctx context.Context) (uint64,
 	return id, nil
 }
 
-// GetTags gets all of the GCP instance's labels (note: these are separate from
-// its tags, which we do not use).
+// GetTags gets all of the GCP instance's labels and tags.
 func (client *InstanceMetadataClient) GetTags(ctx context.Context) (map[string]string, error) {
 	// Get a bunch of info from instance metadata.
 	projectID, err := client.GetProjectID(ctx)
