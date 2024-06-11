@@ -1121,16 +1121,9 @@ func (h *Handler) getUserContext(w http.ResponseWriter, r *http.Request, p httpr
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
-	accessMonitoringEnabled := pingResp.GetServerFeatures().GetAccessMonitoring().GetEnabled()
 
-	// DELETE IN 16.0
-	// If ServerFeatures.AccessMonitoring is nil, then that means the response came from a older auth
-	// where ServerFeatures.AccessMonitoring field does not exist.
-	if pingResp.GetServerFeatures().GetAccessMonitoring() == nil {
-		accessMonitoringEnabled = pingResp.ServerFeatures != nil && pingResp.ServerFeatures.GetIdentityGovernance()
-	}
-
-	userContext, err := ui.NewUserContext(user, accessChecker.Roles(), *pingResp.ServerFeatures, desktopRecordingEnabled, accessMonitoringEnabled)
+	accessMonitoringEntitlement := authclient.GetEntitlement(pingResp.GetServerFeatures().GetEntitlements(), teleport.AccessMonitoring)
+	userContext, err := ui.NewUserContext(user, accessChecker.Roles(), *pingResp.ServerFeatures, desktopRecordingEnabled, accessMonitoringEntitlement.Enabled)
 	if err != nil {
 		return nil, trace.Wrap(err)
 	}
@@ -1569,7 +1562,7 @@ func (h *Handler) pingWithConnector(w http.ResponseWriter, r *http.Request, p ht
 func (h *Handler) getWebConfig(w http.ResponseWriter, r *http.Request, p httprouter.Params) (interface{}, error) {
 	httplib.SetWebConfigHeaders(w.Header())
 
-	authProviders := []webclient.WebConfigAuthProvider{}
+	var authProviders []webclient.WebConfigAuthProvider
 
 	// get all OIDC connectors
 	oidcConnectors, err := h.cfg.ProxyClient.GetOIDCConnectors(r.Context(), false)
@@ -1655,7 +1648,6 @@ func (h *Handler) getWebConfig(w http.ResponseWriter, r *http.Request, p httprou
 
 	// get tunnel address to display on cloud instances
 	tunnelPublicAddr := ""
-	assistEnabled := false // TODO(jakule) remove when plugins are implemented
 	proxyConfig, err := h.cfg.ProxySettings.GetProxySettings(r.Context())
 	if err != nil {
 		h.log.WithError(err).Warn("Cannot retrieve ProxySettings, tunnel address won't be set in Web UI.")
@@ -1663,75 +1655,38 @@ func (h *Handler) getWebConfig(w http.ResponseWriter, r *http.Request, p httprou
 		if clusterFeatures.GetCloud() {
 			tunnelPublicAddr = proxyConfig.SSH.TunnelPublicAddr
 		}
-		// TODO(jakule): This part should be removed once the plugin support is added to OSS.
-		if proxyConfig.AssistEnabled {
-			enabled, err := h.cfg.ProxyClient.IsAssistEnabled(r.Context())
-			if err != nil {
-				return nil, trace.Wrap(err)
-			}
-
-			// disable if auth doesn't support assist
-			assistEnabled = enabled.Enabled
-		}
 	}
 
-	// disable joining sessions if proxy session recording is enabled
-	canJoinSessions := true
-	recCfg, err := h.cfg.ProxyClient.GetSessionRecordingConfig(r.Context())
+	automaticUpgradesTargetVersion, err := h.cfg.AutomaticUpgradesChannels.DefaultVersion(r.Context())
 	if err != nil {
-		h.log.WithError(err).Error("Cannot retrieve SessionRecordingConfig.")
-	} else {
-		canJoinSessions = !services.IsRecordAtProxy(recCfg.GetMode())
+		h.log.WithError(err).Error("Cannot read target version")
 	}
 
-	automaticUpgradesEnabled := clusterFeatures.GetAutomaticUpgrades()
-	var automaticUpgradesTargetVersion string
-	if automaticUpgradesEnabled {
-		automaticUpgradesTargetVersion, err = h.cfg.AutomaticUpgradesChannels.DefaultVersion(r.Context())
-		if err != nil {
-			h.log.WithError(err).Error("Cannot read target version")
+	var e map[string]webclient.EntitlementInfo
+	for k, info := range clusterFeatures.Entitlements {
+		e[k] = webclient.EntitlementInfo{
+			Enabled: info.Enabled,
+			Limit:   info.Limit,
+			Limited: info.Limited,
 		}
 	}
-
-	// TODO(mcbattirola): remove isTeam when it is no longer used
-	isTeam := clusterFeatures.GetProductType() == proto.ProductType_PRODUCT_TYPE_TEAM
-
-	policy := clusterFeatures.GetPolicy()
 
 	webCfg := webclient.WebConfig{
+		// TODO(mcbattirola): remove isTeam when it is no longer used
+		IsTeam:                         clusterFeatures.GetProductType() == proto.ProductType_PRODUCT_TYPE_TEAM,
 		Edition:                        modules.GetModules().BuildType(),
 		Auth:                           authSettings,
-		CanJoinSessions:                canJoinSessions,
 		IsCloud:                        clusterFeatures.GetCloud(),
 		TunnelPublicAddress:            tunnelPublicAddr,
-		RecoveryCodesEnabled:           clusterFeatures.GetRecoveryCodes(),
 		UI:                             h.getUIConfig(r.Context()),
 		IsDashboard:                    services.IsDashboard(clusterFeatures),
 		IsUsageBasedBilling:            clusterFeatures.GetIsUsageBased(),
-		AutomaticUpgrades:              automaticUpgradesEnabled,
 		AutomaticUpgradesTargetVersion: automaticUpgradesTargetVersion,
-		AssistEnabled:                  assistEnabled,
-		HideInaccessibleFeatures:       clusterFeatures.GetFeatureHiding(),
 		CustomTheme:                    clusterFeatures.GetCustomTheme(),
-		IsIGSEnabled:                   clusterFeatures.GetIdentityGovernance(),
-		IsPolicyEnabled:                policy != nil && policy.Enabled,
-		FeatureLimits: webclient.FeatureLimits{
-			AccessListCreateLimit:               int(clusterFeatures.GetAccessList().GetCreateLimit()),
-			AccessMonitoringMaxReportRangeLimit: int(clusterFeatures.GetAccessMonitoring().GetMaxReportRangeLimit()),
-			AccessRequestMonthlyRequestLimit:    int(clusterFeatures.GetAccessRequests().GetMonthlyRequestLimit()),
-		},
-		Questionnaire:          clusterFeatures.GetQuestionnaire(),
-		IsStripeManaged:        clusterFeatures.GetIsStripeManaged(),
-		ExternalAuditStorage:   clusterFeatures.GetExternalAuditStorage(),
-		PremiumSupport:         clusterFeatures.GetSupportType() == proto.SupportType_SUPPORT_TYPE_PREMIUM,
-		AccessRequests:         clusterFeatures.GetAccessRequests().MonthlyRequestLimit > 0,
-		TrustedDevices:         clusterFeatures.GetDeviceTrust().GetEnabled(),
-		OIDC:                   clusterFeatures.GetOIDC(),
-		SAML:                   clusterFeatures.GetSAML(),
-		MobileDeviceManagement: clusterFeatures.GetMobileDeviceManagement(),
-		JoinActiveSessions:     clusterFeatures.GetJoinActiveSessions(),
-		// TODO(mcbattirola): remove isTeam when it is no longer used
-		IsTeam: isTeam,
+		Questionnaire:                  clusterFeatures.GetQuestionnaire(),
+		IsStripeManaged:                clusterFeatures.GetIsStripeManaged(),
+		PremiumSupport:                 clusterFeatures.GetSupportType() == proto.SupportType_SUPPORT_TYPE_PREMIUM,
+		Entitlements:                   e,
 	}
 
 	resource, err := h.cfg.ProxyClient.GetClusterName()

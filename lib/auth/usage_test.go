@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gravitational/teleport"
 	"github.com/gravitational/trace"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
@@ -119,7 +120,7 @@ func setUpAccessRequestLimitForJulyAndAugust(t *testing.T, username string, role
 
 	features := modules.GetModules().Features()
 	features.IsUsageBasedBilling = true
-	features.AccessRequests.Limit = monthlyLimit
+	features.Entitlements[teleport.AccessRequests] = modules.EntitlementInfo{Limit: monthlyLimit, Enabled: true, Limited: true}
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: features,
 	})

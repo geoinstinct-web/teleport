@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/gravitational/roundtrip"
+	"github.com/gravitational/teleport"
 	"github.com/gravitational/trace"
 	"golang.org/x/crypto/ssh"
 
@@ -1738,4 +1739,18 @@ func TryCreateAppSessionForClientCertV15(ctx context.Context, client CreateAppSe
 	}
 
 	return ws.GetName(), nil
+}
+
+// todo mberg move???
+func GetEntitlement(set map[string]*proto.EntitlementInfo, e teleport.EntitlementKind) proto.EntitlementInfo {
+	al, ok := set[string(e)]
+	if !ok {
+		return proto.EntitlementInfo{}
+	}
+
+	return proto.EntitlementInfo{
+		Enabled: al.Enabled,
+		Limit:   al.Limit,
+		Limited: al.Limited,
+	}
 }

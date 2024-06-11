@@ -24,6 +24,7 @@ import (
 	"crypto/x509/pkix"
 	"strconv"
 
+	"github.com/gravitational/teleport"
 	"github.com/gravitational/trace"
 
 	"github.com/gravitational/teleport/api/client/proto"
@@ -35,7 +36,7 @@ import (
 // GenerateWindowsDesktopCert generates client certificate for Windows RDP
 // authentication.
 func (a *Server) GenerateWindowsDesktopCert(ctx context.Context, req *proto.WindowsDesktopCertRequest) (*proto.WindowsDesktopCertResponse, error) {
-	if !modules.GetModules().Features().Desktop.Enabled {
+	if !modules.GetModules().Features().GetEntitlement(teleport.Desktop).Enabled {
 		return nil, trace.AccessDenied(
 			"this Teleport cluster is not licensed for desktop access, please contact the cluster administrator")
 	}

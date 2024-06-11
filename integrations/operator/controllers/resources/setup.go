@@ -20,6 +20,8 @@ package resources
 
 import (
 	"github.com/go-logr/logr"
+	"github.com/gravitational/teleport"
+	"github.com/gravitational/teleport/lib/auth/authclient"
 	"github.com/gravitational/trace"
 	kclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -48,20 +50,20 @@ func SetupAllControllers(log logr.Logger, mgr manager.Manager, teleportClient *c
 		{"TeleportOpenSSHEICEServerV2", NewOpenSSHEICEServerV2Reconciler},
 	}
 
-	if features.GetOIDC() {
+	if authclient.GetEntitlement(features.Entitlements, teleport.OIDC).Enabled {
 		reconcilers = append(reconcilers, reconcilerFactory{"TeleportOIDCConnector", NewOIDCConnectorReconciler})
 	} else {
 		log.Info("OIDC connectors are only available in Teleport Enterprise edition. TeleportOIDCConnector resources won't be reconciled")
 	}
 
-	if features.GetSAML() {
+	if authclient.GetEntitlement(features.Entitlements, teleport.SAML).Enabled {
 		reconcilers = append(reconcilers, reconcilerFactory{"TeleportSAMLConnector", NewSAMLConnectorReconciler})
 	} else {
 		log.Info("SAML connectors are only available in Teleport Enterprise edition. TeleportSAMLConnector resources won't be reconciled")
 	}
 
 	// Login Rules are enterprise-only but there is no specific feature flag for them.
-	if features.GetOIDC() || features.GetSAML() {
+	if authclient.GetEntitlement(features.Entitlements, teleport.OIDC).Enabled || authclient.GetEntitlement(features.Entitlements, teleport.SAML).Enabled {
 		reconcilers = append(reconcilers, reconcilerFactory{"TeleportLoginRule", NewLoginRuleReconciler})
 	} else {
 		log.Info("Login Rules are only available in Teleport Enterprise edition. TeleportLoginRule resources won't be reconciled")

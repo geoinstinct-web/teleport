@@ -3476,20 +3476,20 @@ func (a *ServerWithRoles) UpsertOIDCConnector(ctx context.Context, connector typ
 	if err := a.authConnectorAction(apidefaults.Namespace, types.KindOIDC, types.VerbUpdate); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	if !modules.GetModules().Features().OIDC.Enabled {
-		// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
-		// we can't currently propagate wrapped errors across the gRPC boundary,
-		// and we want tctl to display a clean user-facing message in this case
-		return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.OIDC).Enabled {
+// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
+// we can't currently propagate wrapped errors across the gRPC boundary,
+// and we want tctl to display a clean user-facing message in this case
+return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
+}
 
-	// Support reused MFA for bulk tctl create requests.
-	if err := a.context.AuthorizeAdminActionAllowReusedMFA(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+// Support reused MFA for bulk tctl create requests.
+if err := a.context.AuthorizeAdminActionAllowReusedMFA(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	upserted, err := a.authServer.UpsertOIDCConnector(ctx, connector)
-	return upserted, trace.Wrap(err)
+upserted, err := a.authServer.UpsertOIDCConnector(ctx, connector)
+return upserted, trace.Wrap(err)
 }
 
 // UpdateOIDCConnector updates an existing OIDC connector.
@@ -3497,19 +3497,19 @@ func (a *ServerWithRoles) UpdateOIDCConnector(ctx context.Context, connector typ
 	if err := a.authConnectorAction(apidefaults.Namespace, types.KindOIDC, types.VerbUpdate); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	if !modules.GetModules().Features().OIDC.Enabled {
-		// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
-		// we can't currently propagate wrapped errors across the gRPC boundary,
-		// and we want tctl to display a clean user-facing message in this case
-		return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.OIDC).Enabled {
+// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
+// we can't currently propagate wrapped errors across the gRPC boundary,
+// and we want tctl to display a clean user-facing message in this case
+return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
+}
 
-	if err := a.context.AuthorizeAdminAction(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.context.AuthorizeAdminAction(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	updated, err := a.authServer.UpdateOIDCConnector(ctx, connector)
-	return updated, trace.Wrap(err)
+updated, err := a.authServer.UpdateOIDCConnector(ctx, connector)
+return updated, trace.Wrap(err)
 }
 
 // CreateOIDCConnector creates a new OIDC connector.
@@ -3517,20 +3517,20 @@ func (a *ServerWithRoles) CreateOIDCConnector(ctx context.Context, connector typ
 	if err := a.authConnectorAction(apidefaults.Namespace, types.KindOIDC, types.VerbCreate); err != nil {
 		return nil, trace.Wrap(err)
 	}
-	if !modules.GetModules().Features().OIDC.Enabled {
-		// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
-		// we can't currently propagate wrapped errors across the gRPC boundary,
-		// and we want tctl to display a clean user-facing message in this case
-		return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.OIDC).Enabled {
+// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
+// we can't currently propagate wrapped errors across the gRPC boundary,
+// and we want tctl to display a clean user-facing message in this case
+return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
+}
 
-	// Support reused MFA for bulk tctl create requests.
-	if err := a.context.AuthorizeAdminActionAllowReusedMFA(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+// Support reused MFA for bulk tctl create requests.
+if err := a.context.AuthorizeAdminActionAllowReusedMFA(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	creted, err := a.authServer.CreateOIDCConnector(ctx, connector)
-	return creted, trace.Wrap(err)
+creted, err := a.authServer.CreateOIDCConnector(ctx, connector)
+return creted, trace.Wrap(err)
 }
 
 func (a *ServerWithRoles) GetOIDCConnector(ctx context.Context, id string, withSecrets bool) (types.OIDCConnector, error) {
@@ -3561,40 +3561,40 @@ func (a *ServerWithRoles) GetOIDCConnectors(ctx context.Context, withSecrets boo
 }
 
 func (a *ServerWithRoles) CreateOIDCAuthRequest(ctx context.Context, req types.OIDCAuthRequest) (*types.OIDCAuthRequest, error) {
-	if !modules.GetModules().Features().OIDC.Enabled {
-		// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
-		// we can't currently propagate wrapped errors across the gRPC boundary,
-		// and we want tctl to display a clean user-facing message in this case
-		return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.OIDC).Enabled {
+// TODO(zmb3): ideally we would wrap ErrRequiresEnterprise here, but
+// we can't currently propagate wrapped errors across the gRPC boundary,
+// and we want tctl to display a clean user-facing message in this case
+return nil, trace.AccessDenied("OIDC is only available in Teleport Enterprise")
+}
 
-	if err := a.action(apidefaults.Namespace, types.KindOIDCRequest, types.VerbCreate); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.action(apidefaults.Namespace, types.KindOIDCRequest, types.VerbCreate); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	if err := a.context.AuthorizeAdminAction(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.context.AuthorizeAdminAction(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	// require additional permissions for executing SSO test flow.
-	if req.SSOTestFlow {
-		if err := a.authConnectorAction(apidefaults.Namespace, types.KindOIDC, types.VerbCreate); err != nil {
-			return nil, trace.Wrap(err)
-		}
-	}
+// require additional permissions for executing SSO test flow.
+if req.SSOTestFlow {
+if err := a.authConnectorAction(apidefaults.Namespace, types.KindOIDC, types.VerbCreate); err != nil {
+return nil, trace.Wrap(err)
+}
+}
 
-	// Only the Proxy service can create web sessions via OIDC connector.
-	if req.CreateWebSession && !a.hasBuiltinRole(types.RoleProxy) {
-		return nil, trace.AccessDenied("this request can be only executed by a proxy")
-	}
+// Only the Proxy service can create web sessions via OIDC connector.
+if req.CreateWebSession && !a.hasBuiltinRole(types.RoleProxy) {
+return nil, trace.AccessDenied("this request can be only executed by a proxy")
+}
 
-	oidcReq, err := a.authServer.CreateOIDCAuthRequest(ctx, req)
-	if err != nil {
-		emitSSOLoginFailureEvent(a.CloseContext(), a.authServer.emitter, events.LoginMethodOIDC, err, req.SSOTestFlow)
-		return nil, trace.Wrap(err)
-	}
+oidcReq, err := a.authServer.CreateOIDCAuthRequest(ctx, req)
+if err != nil {
+emitSSOLoginFailureEvent(a.CloseContext(), a.authServer.emitter, events.LoginMethodOIDC, err, req.SSOTestFlow)
+return nil, trace.Wrap(err)
+}
 
-	return oidcReq, nil
+return oidcReq, nil
 }
 
 // GetOIDCAuthRequest returns OIDC auth request if found.
@@ -3635,61 +3635,61 @@ func (a *ServerWithRoles) DeleteOIDCConnector(ctx context.Context, connectorID s
 
 // UpsertSAMLConnector creates or updates a SAML connector.
 func (a *ServerWithRoles) UpsertSAMLConnector(ctx context.Context, connector types.SAMLConnector) (types.SAMLConnector, error) {
-	if !modules.GetModules().Features().SAML.Enabled {
-		return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.SAML).Enabled {
+return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
+}
 
-	if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbCreate); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbCreate); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbUpdate); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbUpdate); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	// Support reused MFA for bulk tctl create requests.
-	if err := a.context.AuthorizeAdminActionAllowReusedMFA(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+// Support reused MFA for bulk tctl create requests.
+if err := a.context.AuthorizeAdminActionAllowReusedMFA(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	upserted, err := a.authServer.UpsertSAMLConnector(ctx, connector)
-	return upserted, trace.Wrap(err)
+upserted, err := a.authServer.UpsertSAMLConnector(ctx, connector)
+return upserted, trace.Wrap(err)
 }
 
 // CreateSAMLConnector creates a new SAML connector.
 func (a *ServerWithRoles) CreateSAMLConnector(ctx context.Context, connector types.SAMLConnector) (types.SAMLConnector, error) {
-	if !modules.GetModules().Features().SAML.Enabled {
-		return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.SAML).Enabled {
+return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
+}
 
-	if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbCreate); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbCreate); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	if err := a.context.AuthorizeAdminAction(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.context.AuthorizeAdminAction(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	created, err := a.authServer.CreateSAMLConnector(ctx, connector)
-	return created, trace.Wrap(err)
+created, err := a.authServer.CreateSAMLConnector(ctx, connector)
+return created, trace.Wrap(err)
 }
 
 // UpdateSAMLConnector updates an existing SAML connector
 func (a *ServerWithRoles) UpdateSAMLConnector(ctx context.Context, connector types.SAMLConnector) (types.SAMLConnector, error) {
-	if !modules.GetModules().Features().SAML.Enabled {
-		return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.SAML).Enabled {
+return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
+}
 
-	if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbUpdate); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbUpdate); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	if err := a.context.AuthorizeAdminAction(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.context.AuthorizeAdminAction(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	updated, err := a.authServer.UpdateSAMLConnector(ctx, connector)
-	return updated, trace.Wrap(err)
+updated, err := a.authServer.UpdateSAMLConnector(ctx, connector)
+return updated, trace.Wrap(err)
 }
 
 func (a *ServerWithRoles) GetSAMLConnector(ctx context.Context, id string, withSecrets bool) (types.SAMLConnector, error) {
@@ -3722,37 +3722,37 @@ func (a *ServerWithRoles) GetSAMLConnectors(ctx context.Context, withSecrets boo
 }
 
 func (a *ServerWithRoles) CreateSAMLAuthRequest(ctx context.Context, req types.SAMLAuthRequest) (*types.SAMLAuthRequest, error) {
-	if !modules.GetModules().Features().SAML.Enabled {
-		return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
-	}
+	if !modules.GetModules().Features().GetEntitlement(teleport.SAML).Enabled {
+return nil, trace.Wrap(ErrSAMLRequiresEnterprise)
+}
 
-	if err := a.action(apidefaults.Namespace, types.KindSAMLRequest, types.VerbCreate); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.action(apidefaults.Namespace, types.KindSAMLRequest, types.VerbCreate); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	if err := a.context.AuthorizeAdminAction(); err != nil {
-		return nil, trace.Wrap(err)
-	}
+if err := a.context.AuthorizeAdminAction(); err != nil {
+return nil, trace.Wrap(err)
+}
 
-	// require additional permissions for executing SSO test flow.
-	if req.SSOTestFlow {
-		if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbCreate); err != nil {
-			return nil, trace.Wrap(err)
-		}
-	}
+// require additional permissions for executing SSO test flow.
+if req.SSOTestFlow {
+if err := a.authConnectorAction(apidefaults.Namespace, types.KindSAML, types.VerbCreate); err != nil {
+return nil, trace.Wrap(err)
+}
+}
 
-	// Only the Proxy service can create web sessions via SAML connector.
-	if req.CreateWebSession && !a.hasBuiltinRole(types.RoleProxy) {
-		return nil, trace.AccessDenied("this request can be only executed by a proxy")
-	}
+// Only the Proxy service can create web sessions via SAML connector.
+if req.CreateWebSession && !a.hasBuiltinRole(types.RoleProxy) {
+return nil, trace.AccessDenied("this request can be only executed by a proxy")
+}
 
-	samlReq, err := a.authServer.CreateSAMLAuthRequest(ctx, req)
-	if err != nil {
-		emitSSOLoginFailureEvent(a.CloseContext(), a.authServer.emitter, events.LoginMethodSAML, err, req.SSOTestFlow)
-		return nil, trace.Wrap(err)
-	}
+samlReq, err := a.authServer.CreateSAMLAuthRequest(ctx, req)
+if err != nil {
+emitSSOLoginFailureEvent(a.CloseContext(), a.authServer.emitter, events.LoginMethodSAML, err, req.SSOTestFlow)
+return nil, trace.Wrap(err)
+}
 
-	return samlReq, nil
+return samlReq, nil
 }
 
 // ValidateSAMLResponse validates SAML auth response.

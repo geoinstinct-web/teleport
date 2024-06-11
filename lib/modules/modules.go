@@ -58,55 +58,8 @@ type Features struct {
 	Questionnaire bool
 	// SupportType indicates the type of customer's support
 	SupportType proto.SupportType
-
-	// --------------- Cloud Entitlements
-	// AccessList holds its namesake feature settings.
-	AccessLists Entitlement
-	// AccessMonitoring holds its namesake feature settings.
-	AccessMonitoring Entitlement
-	// AccessRequests holds its namesake feature settings.
-	AccessRequests Entitlement
-	// App enables Application Access product
-	App Entitlement
-	// CloudAuditLogRetention holds its namesake feature settings.
-	CloudAuditLogRetention Entitlement
-	// DB enables database access product
-	DB Entitlement
-	// Desktop enables desktop access product
-	Desktop Entitlement
-	// DeviceTrust holds its namesake feature settings.
-	DeviceTrust Entitlement
-	// ExternalAuditStorage indicates whether the EAS feature is enabled in the cluster.
-	ExternalAuditStorage Entitlement
-	// FeatureHiding enables hiding features from being discoverable for users who don't have the necessary permissions.
-	FeatureHiding Entitlement
-	// HSM enables PKCS#11 HSM support
-	HSM Entitlement
-	// Identity indicates whether IGS related features are enabled
-	// todo (michellescripts) deprecate in favor of individual entitlements
-	Identity Entitlement
-	// JoinActiveSessions indicates whether joining active sessions via web UI is enabled
-	JoinActiveSessions Entitlement
-	// Kubernetes enables Kubernetes Access product
-	Kubernetes Entitlement
-	// MobileDeviceManagement indicates whether endpoints management (like Jamf Plugin) can be used in the cluster`
-	MobileDeviceManagement Entitlement
-	// OIDC enables OIDC connectors
-	OIDC Entitlement
-	// OktaSCIM enables Okta SCIM
-	OktaSCIM Entitlement
-	//OktaUserSync enables Okta User Sync
-	OktaUserSync Entitlement
-	// Policy holds settings for the Teleport Policy feature set: includes Teleport Access Graph (TAG).
-	Policy Entitlement
-	// SAML enables SAML connectors
-	SAML Entitlement
-	// SessionLocks ...
-	SessionLocks Entitlement
-	// UpsellAlert is a boolean entitlement that will trigger a cluster alert banner "CTA" for trial plans if true
-	UpsellAlert Entitlement
-	// UsageReporting ...
-	UsageReporting Entitlement
+	// Entitlements reflect Cloud Entitlements including access and limits
+	Entitlements map[teleport.EntitlementKind]EntitlementInfo
 
 	// --------------- Deprecated Fields
 	// AccessControls enables FIPS access controls
@@ -116,22 +69,11 @@ type Features struct {
 	// Deprecated
 	Assist bool
 	// ProductType describes the product being used.
-	// Avoid field; Use entitlements and settings
 	// Deprecated
 	ProductType ProductType
 
-	// todo (michellescripts) have the following fields evaluated for deprecation, consolidation, or fetched from Cloud
-	// Currently this flag is to gate actions from OSS clusters.
-	//
-	// Determining support for access request is currently determined by:
-	//   1) Enterprise + [Features.Identity] == true, new flag
-	//   introduced with Enterprise Usage Based (EUB) product.
-	//   2) Enterprise + [Features.IsUsageBasedBilling] == false, legacy support
-	//   where before EUB, it was unlimited.
-	//
-	// AdvancedAccessWorkflows is currently set to true for all
-	// enterprise editions (team, cloud, on-prem). Historically, access request
-	// was only available for enterprise cloud and enterprise on-prem.
+	// todo (michellescripts) have the following fields evaluated for deprecation, consolidation, or fetch from Cloud
+	// AdvancedAccessWorkflows is currently set to the value of the Cloud Access Requests entitlement
 	AdvancedAccessWorkflows bool
 	// RecoveryCodes enables account recovery codes
 	RecoveryCodes bool
@@ -147,7 +89,7 @@ type Features struct {
 	AccessGraph bool
 }
 
-type Entitlement struct {
+type EntitlementInfo struct {
 	Enabled bool
 	Limited bool
 	Limit   int32
@@ -172,52 +114,50 @@ type DeviceTrustFeature struct {
 
 // ToProto converts Features into proto.Features
 func (f Features) ToProto() *proto.Features {
+	e := make(map[string]*proto.EntitlementInfo, len(f.Entitlements))
+	for k, info := range f.Entitlements {
+		if string(k) == "" {
+			continue
+		}
+
+		e[string(k)] = &proto.EntitlementInfo{
+			Enabled: info.Enabled,
+			Limit:   info.Limit,
+			Limited: info.Limited,
+		}
+	}
+
 	return &proto.Features{
-		// Settings
 		Cloud:           f.Cloud,
 		CustomTheme:     f.CustomTheme,
 		IsStripeManaged: f.IsStripeManaged,
 		IsUsageBased:    f.IsUsageBasedBilling,
 		Questionnaire:   f.Questionnaire,
 		SupportType:     f.SupportType,
+		Entitlements:    e,
 
-		// todo (michellescripts) update this api to use new entitlements; typed as Entitlement
-		AccessList: &proto.AccessListFeature{
-			CreateLimit: f.AccessLists.Limit,
-		},
-		AccessMonitoring: &proto.AccessMonitoringFeature{
-			Enabled:             f.AccessMonitoring.Enabled,
-			MaxReportRangeLimit: f.AccessMonitoring.Limit,
-		},
-		AccessRequests: &proto.AccessRequestsFeature{
-			MonthlyRequestLimit: f.AccessRequests.Limit,
-		},
-		DeviceTrust: &proto.DeviceTrustFeature{
-			Enabled:           f.DeviceTrust.Enabled,
-			DevicesUsageLimit: f.DeviceTrust.Limit,
-		},
-
+		// todo (michellescripts) remove deprecated features
 		AccessControls:          f.AccessControls,
 		AccessGraph:             f.AccessGraph,
 		AdvancedAccessWorkflows: f.AdvancedAccessWorkflows,
-		App:                     f.App.Enabled,
 		Assist:                  f.Assist,
 		AutomaticUpgrades:       f.AutomaticUpgrades,
-		DB:                      f.DB.Enabled,
-		Desktop:                 f.Desktop.Enabled,
-		ExternalAuditStorage:    f.ExternalAuditStorage.Enabled,
-		FeatureHiding:           f.FeatureHiding.Enabled,
-		HSM:                     f.HSM.Enabled,
-		IdentityGovernance:      f.Identity.Enabled,
-		JoinActiveSessions:      f.JoinActiveSessions.Enabled,
-		Kubernetes:              f.Kubernetes.Enabled,
-		MobileDeviceManagement:  f.MobileDeviceManagement.Enabled,
-		OIDC:                    f.OIDC.Enabled,
 		Plugins:                 f.Plugins,
-		Policy:                  &proto.PolicyFeature{Enabled: f.Policy.Enabled},
 		ProductType:             proto.ProductType(f.ProductType),
 		RecoveryCodes:           f.RecoveryCodes,
-		SAML:                    f.SAML.Enabled,
+	}
+}
+
+func (f Features) GetEntitlement(e teleport.EntitlementKind) EntitlementInfo {
+	al, ok := f.Entitlements[e]
+	if !ok {
+		return EntitlementInfo{}
+	}
+
+	return EntitlementInfo{
+		Enabled: al.Enabled,
+		Limit:   al.Limit,
+		Limited: al.Limited,
 	}
 }
 
@@ -384,6 +324,8 @@ func (p *defaultModules) PrintVersion() {
 }
 
 // Features returns supported features
+// todo (michellescripts) remove deprecated features
+// todo mberg what leverages this vs full features?
 func (p *defaultModules) Features() Features {
 	p.loadDynamicValues.Do(func() {
 		p.automaticUpgrades = automaticupgrades.IsEnabled()
@@ -393,12 +335,13 @@ func (p *defaultModules) Features() Features {
 		Assist:            true,
 		AutomaticUpgrades: p.automaticUpgrades,
 		SupportType:       proto.SupportType_SUPPORT_TYPE_FREE,
-
-		App:                Entitlement{Enabled: true, Limited: false},
-		DB:                 Entitlement{Enabled: true, Limited: false},
-		Desktop:            Entitlement{Enabled: true, Limited: false},
-		JoinActiveSessions: Entitlement{Enabled: true, Limited: false},
-		Kubernetes:         Entitlement{Enabled: true, Limited: false},
+		Entitlements: map[teleport.EntitlementKind]EntitlementInfo{
+			teleport.App:                {Enabled: true, Limited: false, Limit: 0},
+			teleport.DB:                 {Enabled: true, Limited: false, Limit: 0},
+			teleport.Desktop:            {Enabled: true, Limited: false, Limit: 0},
+			teleport.JoinActiveSessions: {Enabled: true, Limited: false, Limit: 0},
+			teleport.K8s:                {Enabled: true, Limited: false, Limit: 0},
+		},
 	}
 }
 

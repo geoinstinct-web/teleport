@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/gravitational/teleport/lib/auth/authclient"
 	"github.com/gravitational/trace"
 
 	"github.com/gravitational/teleport"
@@ -47,7 +48,9 @@ func (process *TeleportProcess) initKubernetes() {
 		if conn == nil {
 			return trace.Wrap(err)
 		}
-		if !process.GetClusterFeatures().Kubernetes {
+
+		k8sEntitlement := authclient.GetEntitlement(process.GetClusterFeatures().Entitlements, teleport.K8s)
+		if !k8sEntitlement.Enabled {
 			logger.WarnContext(process.ExitContext(), "Warning: Kubernetes service not initialized because Teleport Auth Server is not licensed for Kubernetes Access. Please contact the cluster administrator to enable it.")
 			return nil
 		}

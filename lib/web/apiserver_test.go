@@ -4417,7 +4417,9 @@ func TestClusterAppsGet(t *testing.T) {
 func TestApplicationAccessDisabled(t *testing.T) {
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			App: modules.Entitlement{Enabled: false},
+			Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+				teleport.App: {Enabled: false},
+			},
 		},
 	})
 
@@ -4575,13 +4577,14 @@ func TestGetWebConfig(t *testing.T) {
 			PrivateKeyPolicy:   keys.PrivateKeyPolicyNone,
 			MOTD:               MOTD,
 		},
-		CanJoinSessions:    true,
-		ProxyClusterName:   env.server.ClusterName(),
-		IsCloud:            false,
-		AssistEnabled:      false,
-		AutomaticUpgrades:  false,
-		JoinActiveSessions: true,
-		Edition:            modules.BuildOSS, // testBuildType is empty
+		ProxyClusterName:  env.server.ClusterName(),
+		IsCloud:           false,
+		AutomaticUpgrades: false,
+		Edition:           modules.BuildOSS, // testBuildType is empty
+		Entitlements: map[string]webclient.EntitlementInfo{
+			string(teleport.JoinActiveSessions): {Enabled: true},
+			string(teleport.Assist):             {Enabled: false},
+		},
 	}
 
 	// Make a request.
@@ -4630,8 +4633,8 @@ func TestGetWebConfig(t *testing.T) {
 	expectedCfg.IsUsageBasedBilling = true
 	expectedCfg.AutomaticUpgrades = true
 	expectedCfg.AutomaticUpgradesTargetVersion = "v" + teleport.Version
-	expectedCfg.AssistEnabled = false
-	expectedCfg.JoinActiveSessions = false
+	expectedCfg.Entitlements[string(teleport.Assist)] = webclient.EntitlementInfo{Enabled: false}
+	expectedCfg.Entitlements[string(teleport.JoinActiveSessions)] = webclient.EntitlementInfo{Enabled: false}
 	expectedCfg.Edition = "" // testBuildType is empty
 
 	// request and verify enabled features are enabled.
@@ -4677,17 +4680,15 @@ func TestGetWebConfig_IGSFeatureLimits(t *testing.T) {
 
 	modules.SetTestModules(t, &modules.TestModules{
 		TestFeatures: modules.Features{
-			ProductType: modules.ProductTypeTeam,
-			Identity:    modules.Entitlement{Enabled: true},
-			AccessLists: modules.Entitlement{
-				Limit: 5,
-			},
-			AccessMonitoring: modules.Entitlement{
-				Limit: 10,
-			},
+			ProductType:         modules.ProductTypeTeam,
 			IsUsageBasedBilling: true,
 			IsStripeManaged:     true,
 			Questionnaire:       true,
+			Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+				teleport.Identity:         {Enabled: true},
+				teleport.AccessLists:      {Enabled: true, Limited: true, Limit: 5},
+				teleport.AccessMonitoring: {Enabled: true, Limited: true, Limit: 10},
+			},
 		},
 	})
 
@@ -4698,17 +4699,17 @@ func TestGetWebConfig_IGSFeatureLimits(t *testing.T) {
 			AuthType:         constants.Local,
 			PrivateKeyPolicy: keys.PrivateKeyPolicyNone,
 		},
-		CanJoinSessions:  true,
-		ProxyClusterName: env.server.ClusterName(),
-		FeatureLimits: webclient.FeatureLimits{
-			AccessListCreateLimit:               5,
-			AccessMonitoringMaxReportRangeLimit: 10,
-		},
+		ProxyClusterName:    env.server.ClusterName(),
 		IsTeam:              true,
-		IsIGSEnabled:        true,
 		IsStripeManaged:     true,
 		Questionnaire:       true,
 		IsUsageBasedBilling: true,
+		Entitlements: map[string]webclient.EntitlementInfo{
+			string(teleport.Identity):           {Enabled: true},
+			string(teleport.JoinActiveSessions): {Enabled: true},
+			string(teleport.AccessLists):        {Enabled: true, Limited: true, Limit: 5},
+			string(teleport.AccessMonitoring):   {Enabled: true, Limited: true, Limit: 10},
+		},
 	}
 
 	// Make a request.
@@ -8869,7 +8870,9 @@ func startKubeWithoutCleanup(ctx context.Context, t *testing.T, cfg startKubeOpt
 			Clock:         clockwork.NewRealClock(),
 			ClusterFeatures: func() authproto.Features {
 				return authproto.Features{
-					Kubernetes: true,
+					Entitlements: map[string]*authproto.EntitlementInfo{
+						string(teleport.K8s): {Enabled: true},
+					},
 				}
 			},
 		},

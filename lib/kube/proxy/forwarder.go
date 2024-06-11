@@ -490,8 +490,9 @@ const accessDeniedMsg = "[00] access denied"
 
 // authenticate function authenticates request
 func (f *Forwarder) authenticate(req *http.Request) (*authContext, error) {
+	k8sEntitlement := authclient.GetEntitlement(f.cfg.ClusterFeatures().Entitlements, teleport.K8s)
 	// If the cluster is not licensed for Kubernetes, return an error to the client.
-	if !f.cfg.ClusterFeatures().Kubernetes {
+	if !k8sEntitlement.Enabled {
 		// If the cluster is not licensed for Kubernetes, return an error to the client.
 		return nil, trace.AccessDenied("Teleport cluster is not licensed for Kubernetes")
 	}

@@ -457,40 +457,18 @@ enum SupportType {
 }
 
 // Features are auth server features.
+// Features are auth server features.
 message Features {
-  // Kubernetes enables Kubernetes Access product
-  bool Kubernetes = 1 [(gogoproto.jsontag) = "kubernetes"];
-  // App enables Application Access product
-  bool App = 2 [(gogoproto.jsontag) = "app"];
-  // DB enables database access product
-  bool DB = 3 [(gogoproto.jsontag) = "db"];
-  // OIDC enables OIDC connectors
-  bool OIDC = 4 [(gogoproto.jsontag) = "oidc"];
-  // SAML enables SAML connectors
-  bool SAML = 5 [(gogoproto.jsontag) = "saml"];
+  reserved 1, 2, 3, 4, 5;
+  reserved "kubernetes", "app", "db", "oidc", "saml";
   // AccessControls enables FIPS access controls
   bool AccessControls = 6 [(gogoproto.jsontag) = "access_controls"];
-  // Currently this flag is to gate actions from OSS clusters.
-  //
-  // Determining support for access request is currently determined by:
-  //   1) Enterprise + [Features.IdentityGovernanceSecurity] == true, new flag
-  //   introduced with Enterprise Usage Based (EUB) product.
-  //   2) Enterprise + [Features.IsUsageBasedBilling] == false, legacy support
-  //   where before EUB, it was unlimited.
-  //
-  // AdvancedAccessWorkflows is currently set to true for all
-  // enterprise editions (team, cloud, on-prem). Historically, access request
-  // was only available for enterprise cloud and enterprise on-prem.
+  // AdvancedAccessWorkflows is currently set to the value of the Cloud AccessRequests entitlement
   bool AdvancedAccessWorkflows = 7 [(gogoproto.jsontag) = "advanced_access_workflows"];
   // Cloud enables some cloud-related features
   bool Cloud = 8 [(gogoproto.jsontag) = "cloud"];
-  // HSM enables PKCS#11 HSM support
-  bool HSM = 9 [(gogoproto.jsontag) = "hsm"];
-  // Desktop enables desktop access product
-  bool Desktop = 10 [(gogoproto.jsontag) = "desktop"];
-  reserved 11; // bool ModeratedSessions
-  reserved 12; // bool MachineID
-  reserved 13; // bool ResourceAccessRequests
+  reserved 9, 10, 11, 12, 13;
+  reserved "hsm", "desktop", "moderated_sessions", "machine_id", "resource_access_requests";
   // RecoveryCodes enables recovery codes
   bool RecoveryCodes = 14 [(gogoproto.jsontag) = "recovery_codes"];
   // Plugins enables hosted plugins
@@ -501,51 +479,47 @@ message Features {
   bool IsUsageBased = 17 [(gogoproto.jsontag) = "is_usage_based"];
   // Assist enables the Assistant feature
   bool Assist = 18 [(gogoproto.jsontag) = "assist"];
-  // DeviceTrust holds its namesake feature settings.
-  DeviceTrustFeature DeviceTrust = 19 [(gogoproto.jsontag) = "device_trust,omitempty"];
-  // FeatureHiding enables hiding features from being discoverable for users who don't have the necessary permissions.
-  bool FeatureHiding = 20 [(gogoproto.jsontag) = "feature_hiding,omitempty"];
-  // AccessRequests holds its namesake feature settings.
-  AccessRequestsFeature AccessRequests = 21 [(gogoproto.jsontag) = "access_requests,omitempty"];
+  reserved 19, 20, 21;
+  reserved "device_trust", "feature_hiding", "access_requests";
   // CustomTheme holds the name of WebUI custom theme.
   string CustomTheme = 22 [(gogoproto.jsontag) = "custom_theme,omitempty"];
-  // IdentityGovernance indicates whether IGS related features are enabled:
-  // access list, access request, access monitoring, device trust.
-  bool IdentityGovernance = 23 [(gogoproto.jsontag) = "identity_governance,omitempty"];
+  reserved 23;
+  reserved "identity_governance";
   // AccessGraph enables the usage of access graph.
   // NOTE: this is a legacy flag that is currently used to signal
   // that Access Graph integration is *enabled* on a cluster.
   // *Access* to the feature is gated on the `Policy` flag.
   // TODO(justinas): remove this field once "TAG enabled" status is moved to a resource in the backend.
   bool AccessGraph = 24 [(gogoproto.jsontag) = "access_graph,omitempty"];
-  // AccessListFeature holds its namesake feature settings.
-  AccessListFeature AccessList = 25 [(gogoproto.jsontag) = "access_list,omitempty"];
-  // AccessMonitoringFeature holds its namesake feature settings.
-  AccessMonitoringFeature AccessMonitoring = 26 [(gogoproto.jsontag) = "access_monitoring,omitempty"];
+
+  reserved 25, 26;
+  reserved "access_list", "access_monitoring";
   // ProductType describes the product being used.
   ProductType ProductType = 27 [(gogoproto.jsontag) = "product_type,omitempty"];
-  // Policy enables the Teleport Policy feature set.
-  // At the time of writing, this includes Teleport Access Graph (TAG).
-  PolicyFeature Policy = 28 [(gogoproto.jsontag) = "policy,omitempty"];
+  reserved 28;
+  reserved "policy";
   // Questionnaire indicates whether cluster users should get an onboarding questionnaire
   bool Questionnaire = 29 [(gogoproto.jsontag) = "questionnaire,omitempty"];
   // IsStripeManaged indicates if the cluster billing is managed via Stripe
   bool IsStripeManaged = 30 [(gogoproto.jsontag) = "is_stripe_managed,omitempty"];
-  // ExternalAuditStorage indicates whether the EAS feature is enabled in the cluster.
-  bool ExternalAuditStorage = 31 [(gogoproto.jsontag) = "external_audit_storage,omitempty"];
+  reserved 31;
+  reserved "external_audit_storage";
   // SupportType indicates the type of the customer's support
   SupportType SupportType = 32 [(gogoproto.jsontag) = "support_type,omitempty"];
-  // JoinActiveSessions indicates whether joining active sessions via web UI is enabled
-  bool JoinActiveSessions = 33 [(gogoproto.jsontag) = "join_active_sessions,omitempty"];
-  // MobileDeviceManagement indicates whether endpoint management (like Jamf Plugin) can be used in the cluster
-  bool MobileDeviceManagement = 34 [(gogoproto.jsontag) = "mobile_device_management,omitempty"];
-  // todo mberg add additional features here? or no?
-  //    bool CloudAuditLogRetention = xx;
-  //    bool OktaSCIM = xx;
-  //    bool OktaUserSync = xx;
-  //    bool SessionLocks = xx;
-  //    bool UpsellAlert = xx;
-  //    bool UsageReporting = xx;
+  reserved 33, 34;
+  reserved "join_active_sessions", "mobile_device_management";
+  // entitlements define a customer’s access to a specific features
+  map<string, EntitlementInfo> entitlements = 35;
+}
+
+// EntitlementInfo is the state and limits of a particular entitlement
+message EntitlementInfo {
+  // enabled indicates the feature is 'on' if true
+  bool enabled = 1;
+  // limited indicates the feature is in a 'limited' or 'teaser' state if true
+  bool limited = 2;
+  // limit indicates the allotted amount of use when limited
+  int32 limit = 3;
 }
 
 // DeviceTrustFeature holds the Device Trust feature general and usage-based

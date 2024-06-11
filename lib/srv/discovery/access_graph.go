@@ -26,6 +26,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gravitational/teleport"
+	"github.com/gravitational/teleport/lib/auth/authclient"
 	"github.com/gravitational/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -241,7 +243,8 @@ func (s *Server) initializeAndWatchAccessGraph(ctx context.Context, reloadCh <-c
 	)
 
 	clusterFeatures := s.Config.ClusterFeatures()
-	if !clusterFeatures.AccessGraph && (clusterFeatures.Policy == nil || !clusterFeatures.Policy.Enabled) {
+	policy := authclient.GetEntitlement(clusterFeatures.Entitlements, teleport.Policy)
+	if !clusterFeatures.AccessGraph && !policy.Enabled {
 		return trace.Wrap(errTAGFeatureNotEnabled)
 	}
 
@@ -250,7 +253,7 @@ func (s *Server) initializeAndWatchAccessGraph(ctx context.Context, reloadCh <-c
 	)
 	// AcquireSemaphoreLock will retry until the semaphore is acquired.
 	// This prevents multiple discovery services to push AWS resources in parallel.
-	// lease must be released to cleanup the resource in auth server.
+	// lease must be released to clean up the resource in auth server.
 	lease, err := services.AcquireSemaphoreLockWithRetry(
 		ctx,
 		services.SemaphoreLockConfigWithRetry{

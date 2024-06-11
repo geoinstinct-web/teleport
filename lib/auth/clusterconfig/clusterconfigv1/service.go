@@ -20,6 +20,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/gravitational/teleport"
 	"github.com/gravitational/trace"
 
 	clusterconfigpb "github.com/gravitational/teleport/api/gen/proto/go/teleport/clusterconfig/v1"
@@ -864,7 +865,7 @@ func (s *Service) GetClusterAccessGraphConfig(ctx context.Context, _ *clustercon
 	}
 
 	// If the policy feature is disabled in the license, return a disabled response.
-	if !modules.GetModules().Features().Policy.Enabled && !modules.GetModules().Features().AccessGraph {
+	if !modules.GetModules().Features().GetEntitlement(teleport.Policy).Enabled && !modules.GetModules().Features().AccessGraph {
 		return &clusterconfigpb.GetClusterAccessGraphConfigResponse{
 			AccessGraph: &clusterconfigpb.AccessGraphConfig{
 				Enabled: false,

@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gravitational/teleport"
 	"github.com/gravitational/trace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -411,9 +412,11 @@ func (p *cliModules) PrintVersion() {
 // Features returns supported features
 func (p *cliModules) Features() modules.Features {
 	return modules.Features{
-		Kubernetes:              modules.Entitlement{Enabled: true},
-		DB:                      modules.Entitlement{Enabled: true},
-		App:                     modules.Entitlement{Enabled: true},
+		Entitlements: map[teleport.EntitlementKind]modules.EntitlementInfo{
+			teleport.K8s: {Enabled: true},
+			teleport.DB:  {Enabled: true},
+			teleport.App: {Enabled: true},
+		},
 		AdvancedAccessWorkflows: true,
 		AccessControls:          true,
 	}
