@@ -1,0 +1,33 @@
+---
+title: "Teleport Terraform Provider"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+The Teleport Terraform provider allows Terraform users to configure Teleport
+from Terraform.
+
+This section is the Teleport Terraform Provider reference.
+It lists all the supported resources and their fields.
+
+<Admonition type="tip">
+To get started with the Terraform provider, you must start with the installation guide.
+Once you got a working provider, we recommend you to follow the
+["Managing users and roles with IaC"](../management/dynamic-resources/user-and-role.mdx) guide.
+</Admonition>
+
+The provider exposes Teleport resources both as Terraform datasources and Terraform resources.
+Datasources are used by Terraform to fetch information from Teleport, while resources are used
+to create resources in Teleport.
+
+- [list of supported datasources](./datasources/index.mdx)
+- [list of supported resources](./resources/index.mdx)
+
+{{ if .HasExample -}}
+## Example Usage
+
+{{tffile .ExampleFile }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+

@@ -1756,8 +1756,166 @@
           "slug": "/reference/metrics/"
         },
         {
-          "title": "Terraform Resources",
-          "slug": "/reference/terraform-provider/"
+          "title": "Terraform Provider",
+          "slug": "/reference/terraform/",
+          "entries": [
+            {
+              "title": "Datasources",
+              "slug": "/reference/terraform/data-sources/",
+              "entries": [
+                {
+                  "title": "AccessList",
+                  "slug": "/reference/terraform/data-sources/access_list/"
+                },
+                {
+                  "title": "App",
+                  "slug": "/reference/terraform/data-sources/app/"
+                },
+                {
+                  "title": "Auth Preference",
+                  "slug": "/reference/terraform/data-sources/auth_preference/"
+                },
+                {
+                  "title": "Cluster Maintenance Config",
+                  "slug": "/reference/terraform/data-sources/cluster_maintenance_config/"
+                },
+                {
+                  "title": "Cluster Networking Config",
+                  "slug": "/reference/terraform/data-sources/cluster_networking_config/"
+                },
+                {
+                  "title": "Database",
+                  "slug": "/reference/terraform/data-sources/database/"
+                },
+                {
+                  "title": "GitHub Connector",
+                  "slug": "/reference/terraform/data-sources/github_connector/"
+                },
+                {
+                  "title": "Login Rule",
+                  "slug": "/reference/terraform/data-sources/login_rule/"
+                },
+                {
+                  "title": "OIDC Connector",
+                  "slug": "/reference/terraform/data-sources/oidc_connector/"
+                },
+                {
+                  "title": "Okta Import Rule",
+                  "slug": "/reference/terraform/data-sources/okta_import_rule/"
+                },
+                {
+                  "title": "Provision Token",
+                  "slug": "/reference/terraform/data-sources/provision_token/"
+                },
+                {
+                  "title": "role",
+                  "slug": "/reference/terraform/data-sources/role/"
+                },
+                {
+                  "title": "SAML Connector",
+                  "slug": "/reference/terraform/data-sources/saml_connector/"
+                },
+                {
+                  "title": "Session Recording Config",
+                  "slug": "/reference/terraform/data-sources/session_recording_config/"
+                },
+                {
+                  "title": "Trusted Cluster",
+                  "slug": "/reference/terraform/data-sources/trusted_cluster/"
+                },
+                {
+                  "title": "Trusted Device",
+                  "slug": "/reference/terraform/data-sources/trusted_device/"
+                },
+                {
+                  "title": "User",
+                  "slug": "/reference/terraform/data-sources/user/"
+                }
+              ]
+            },
+            {
+              "title": "Resources",
+              "slug": "/reference/terraform/resources/",
+              "entries": [
+                {
+                  "title": "AccessList",
+                  "slug": "/reference/terraform/resources/access_list/"
+                },
+                {
+                  "title": "App",
+                  "slug": "/reference/terraform/resources/app/"
+                },
+                {
+                  "title": "Auth Preference",
+                  "slug": "/reference/terraform/resources/auth_preference/"
+                },
+                {
+                  "title": "Bot",
+                  "slug": "/reference/terraform/resources/bot/"
+                },
+                {
+                  "title": "Cluster Maintenance Config",
+                  "slug": "/reference/terraform/resources/cluster_maintenance_config/"
+                },
+                {
+                  "title": "Cluster Networking Config",
+                  "slug": "/reference/terraform/resources/cluster_networking_config/"
+                },
+                {
+                  "title": "Database",
+                  "slug": "/reference/terraform/resources/database/"
+                },
+                {
+                  "title": "GitHub Connector",
+                  "slug": "/reference/terraform/resources/github_connector/"
+                },
+                {
+                  "title": "Login Rule",
+                  "slug": "/reference/terraform/resources/login_rule/"
+                },
+                {
+                  "title": "OIDC Connector",
+                  "slug": "/reference/terraform/resources/oidc_connector/"
+                },
+                {
+                  "title": "Okta Import Rule",
+                  "slug": "/reference/terraform/resources/okta_import_rule/"
+                },
+                {
+                  "title": "Provision Token",
+                  "slug": "/reference/terraform/resources/provision_token/"
+                },
+                {
+                  "title": "role",
+                  "slug": "/reference/terraform/resources/role/"
+                },
+                {
+                  "title": "SAML Connector",
+                  "slug": "/reference/terraform/resources/saml_connector/"
+                },
+                {
+                  "title": "Server",
+                  "slug": "/reference/terraform/resources/server/"
+                },
+                {
+                  "title": "Session Recording Config",
+                  "slug": "/reference/terraform/resources/session_recording_config/"
+                },
+                {
+                  "title": "Trusted Cluster",
+                  "slug": "/reference/terraform/resources/trusted_cluster/"
+                },
+                {
+                  "title": "Trusted Device",
+                  "slug": "/reference/terraform/resources/trusted_device/"
+                },
+                {
+                  "title": "User",
+                  "slug": "/reference/terraform/resources/user/"
+                }
+              ]
+            }
+          ]
         },
         {
           "title": "Audit Events and Records",
