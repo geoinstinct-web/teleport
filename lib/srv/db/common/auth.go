@@ -1055,7 +1055,7 @@ func (a *dbAuth) GetAWSIAMCreds(ctx context.Context, sessionCtx *Session) (strin
 		return "", "", "", trace.Wrap(err)
 	}
 
-	baseSession, err := a.cfg.Clients.GetAWSSession(ctx, dbAWS.Region,
+	baseConfig, err := a.cfg.Clients.GetAWSConfigV2(ctx, dbAWS.Region,
 		cloud.WithAssumeRoleFromAWSMeta(dbAWS),
 		cloud.WithAmbientCredentials(),
 	)
@@ -1063,19 +1063,19 @@ func (a *dbAuth) GetAWSIAMCreds(ctx context.Context, sessionCtx *Session) (strin
 		return "", "", "", trace.Wrap(err)
 	}
 
-	// ExternalID should only be used once. If the baseSession assumes a role,
+	// ExternalID should only be used once. If the baseConfig assumes a role,
 	// the chained sessions should have an empty external ID.
-
-	sess, err := a.cfg.Clients.GetAWSSession(ctx, dbAWS.Region,
-		cloud.WithChainedAssumeRole(baseSession, arn, externalIDForChainedAssumeRole(dbAWS)),
+	config, err := a.cfg.Clients.GetAWSConfigV2(ctx, dbAWS.Region,
+		cloud.WithChainedAssumeRole(baseConfig, arn, externalIDForChainedAssumeRole(dbAWS)),
 		cloud.WithAmbientCredentials(),
 	)
 	if err != nil {
 		return "", "", "", trace.Wrap(err)
 	}
 
-	creds, err := sess.Config.Credentials.Get()
+	creds, err := config.Credentials.Retrieve(ctx)
 	if err != nil {
+		// TODO convert err
 		return "", "", "", trace.Wrap(err)
 	}
 
