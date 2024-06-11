@@ -268,7 +268,8 @@
                 {
                     "address": "auth.example.com:3025",
                     "identitySecretName": "teleport-plugin-event-handler-auth-id",
-                    "identitySecretPath": "auth_id"
+                    "identitySecretPath": "auth_id",
+                    "debug": false
                 }
             ],
             "required": [
@@ -315,7 +316,8 @@
                     "storagePath": "/var/lib/teleport/plugins/event-handler/storage",
                     "timeout": "10s",
                     "batch": 20,
-                    "window-size": "12h"
+                    "window-size": "12h",
+                    "debugLogging": false
                 }
             ],
             "required": [
@@ -346,6 +348,14 @@
                     "$id": "#/properties/eventHandler/properties/window-size",
                     "type": "string",
                     "default": "24h"
+                },
+                "debugLogging": {
+                    "$id": "#/properties/eventHandler/properties/debugLogging",
+                    "type": "boolean",
+                    "default": false,
+                    "examples": [
+                        false
+                    ]
                 }
             },
             "additionalProperties": true
