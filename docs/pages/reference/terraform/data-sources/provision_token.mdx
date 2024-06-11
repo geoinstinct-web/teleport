@@ -58,7 +58,7 @@ Optional:
 - `aws_account` (String) AWSAccount is the AWS account ID.
 - `aws_arn` (String) AWSARN is used for the IAM join method, the AWS identity of joining nodes must match this ARN. Supports wildcards "*" and "?".
 - `aws_regions` (List of String) AWSRegions is used for the EC2 join method and is a list of AWS regions a node is allowed to join from.
-- `aws_role` (String) AWSRole is used for the EC2 join method and is the the ARN of the AWS role that the auth server will assume in order to call the ec2 API.
+- `aws_role` (String) AWSRole is used for the EC2 join method and is the ARN of the AWS role that the auth server will assume in order to call the ec2 API.
 
 
 ### Nested Schema for `spec.azure`
@@ -103,8 +103,8 @@ Optional:
 Optional:
 
 - `locations` (List of String) Locations is a list of regions (e.g. "us-west1") and/or zones (e.g. "us-west1-b").
-- `project_ids` (List of String) ProjectIDs is a list of project IDs (e.g. "<example-id-123456>").
-- `service_accounts` (List of String) ServiceAccounts is a list of service account emails (e.g. "<project-number>-compute@developer.gserviceaccount.com").
+- `project_ids` (List of String) ProjectIDs is a list of project IDs (e.g. `<example-id-123456>`).
+- `service_accounts` (List of String) ServiceAccounts is a list of service account emails (e.g. `<project-number>-compute@developer.gserviceaccount.com`).
 
 
 
@@ -154,7 +154,7 @@ Optional:
 - `ref` (String) Ref allows access to be limited to jobs triggered by a specific git ref. Ensure this is used in combination with ref_type.  This field supports simple "glob-style" matching: - Use '*' to match zero or more characters. - Use '?' to match any single character.
 - `ref_protected` (Boolean)
 - `ref_type` (String) RefType allows access to be limited to jobs triggered by a specific git ref type. Example: `branch` or `tag`
-- `sub` (String) Sub roughly uniquely identifies the workload. Example: `project_path:mygroup/my-project:ref_type:branch:ref:main` project_path:{group}/{project}:ref_type:{type}:ref:{branch_name}  This field supports simple "glob-style" matching: - Use '*' to match zero or more characters. - Use '?' to match any single character.
+- `sub` (String) Sub roughly uniquely identifies the workload. Example: `project_path:mygroup/my-project:ref_type:branch:ref:main` project_path:GROUP/PROJECT:ref_type:TYPE:ref:BRANCH_NAME  This field supports simple "glob-style" matching: - Use '*' to match zero or more characters. - Use '?' to match any single character.
 - `user_email` (String) UserEmail is the email of the user executing the job
 - `user_id` (String) UserID is the ID of the user executing the job
 - `user_login` (String) UserLogin is the username of the user executing the job
