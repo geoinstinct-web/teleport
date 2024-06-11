@@ -2728,7 +2728,7 @@
     },
     {
       "source": "/setup/reference/terraform-provider/",
-      "destination": "/reference/terraform-provider/",
+      "destination": "/reference/terraform/",
       "permanent": true
     },
     {

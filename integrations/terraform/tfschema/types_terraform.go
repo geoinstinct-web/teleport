@@ -2662,6 +2662,15 @@ func GenSchemaOIDCConnectorV3(ctx context.Context) (github_com_hashicorp_terrafo
 					Optional:    true,
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
 				},
+				"client_redirect_settings": {
+					Attributes: github_com_hashicorp_terraform_plugin_framework_tfsdk.SingleNestedAttributes(map[string]github_com_hashicorp_terraform_plugin_framework_tfsdk.Attribute{"allowed_https_hostnames": {
+						Description: "a list of hostnames allowed for https client redirect URLs",
+						Optional:    true,
+						Type:        github_com_hashicorp_terraform_plugin_framework_types.ListType{ElemType: github_com_hashicorp_terraform_plugin_framework_types.StringType},
+					}}),
+					Description: "ClientRedirectSettings defines which client redirect URLs are allowed for non-browser SSO logins other than the standard localhost ones.",
+					Optional:    true,
+				},
 				"client_secret": {
 					Description: "ClientSecret is used to authenticate the client.",
 					Optional:    true,
@@ -2862,6 +2871,15 @@ func GenSchemaSAMLConnectorV2(ctx context.Context) (github_com_hashicorp_terrafo
 					Sensitive:   true,
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
 				},
+				"client_redirect_settings": {
+					Attributes: github_com_hashicorp_terraform_plugin_framework_tfsdk.SingleNestedAttributes(map[string]github_com_hashicorp_terraform_plugin_framework_tfsdk.Attribute{"allowed_https_hostnames": {
+						Description: "a list of hostnames allowed for https client redirect URLs",
+						Optional:    true,
+						Type:        github_com_hashicorp_terraform_plugin_framework_types.ListType{ElemType: github_com_hashicorp_terraform_plugin_framework_types.StringType},
+					}}),
+					Description: "ClientRedirectSettings defines which client redirect URLs are allowed for non-browser SSO logins other than the standard localhost ones.",
+					Optional:    true,
+				},
 				"display": {
 					Description: "Display controls how this connector is displayed.",
 					Optional:    true,
@@ -3014,6 +3032,15 @@ func GenSchemaGithubConnectorV3(ctx context.Context) (github_com_hashicorp_terra
 					Description: "ClientID is the Github OAuth app client ID.",
 					Required:    true,
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
+				},
+				"client_redirect_settings": {
+					Attributes: github_com_hashicorp_terraform_plugin_framework_tfsdk.SingleNestedAttributes(map[string]github_com_hashicorp_terraform_plugin_framework_tfsdk.Attribute{"allowed_https_hostnames": {
+						Description: "a list of hostnames allowed for https client redirect URLs",
+						Optional:    true,
+						Type:        github_com_hashicorp_terraform_plugin_framework_types.ListType{ElemType: github_com_hashicorp_terraform_plugin_framework_types.StringType},
+					}}),
+					Description: "ClientRedirectSettings defines which client redirect URLs are allowed for non-browser SSO logins other than the standard localhost ones.",
+					Optional:    true,
 				},
 				"client_secret": {
 					Description: "ClientSecret is the Github OAuth app client secret.",
@@ -27676,6 +27703,51 @@ func CopyOIDCConnectorV3FromTerraform(_ context.Context, tf github_com_hashicorp
 							}
 						}
 					}
+					{
+						a, ok := tf.Attrs["client_redirect_settings"]
+						if !ok {
+							diags.Append(attrReadMissingDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings"})
+						} else {
+							v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.Object)
+							if !ok {
+								diags.Append(attrReadConversionFailureDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings", "github.com/hashicorp/terraform-plugin-framework/types.Object"})
+							} else {
+								obj.ClientRedirectSettings = nil
+								if !v.Null && !v.Unknown {
+									tf := v
+									obj.ClientRedirectSettings = &github_com_gravitational_teleport_api_types.SSOClientRedirectSettings{}
+									obj := obj.ClientRedirectSettings
+									{
+										a, ok := tf.Attrs["allowed_https_hostnames"]
+										if !ok {
+											diags.Append(attrReadMissingDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames"})
+										} else {
+											v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.List)
+											if !ok {
+												diags.Append(attrReadConversionFailureDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.List"})
+											} else {
+												obj.AllowedHttpsHostnames = make([]string, len(v.Elems))
+												if !v.Null && !v.Unknown {
+													for k, a := range v.Elems {
+														v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.String)
+														if !ok {
+															diags.Append(attrReadConversionFailureDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github_com_hashicorp_terraform_plugin_framework_types.String"})
+														} else {
+															var t string
+															if !v.Null && !v.Unknown {
+																t = string(v.Value)
+															}
+															obj.AllowedHttpsHostnames[k] = t
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -28481,6 +28553,91 @@ func CopyOIDCConnectorV3ToTerraform(ctx context.Context, obj *github_com_gravita
 							tf.Attrs["max_age"] = v
 						}
 					}
+					{
+						a, ok := tf.AttrTypes["client_redirect_settings"]
+						if !ok {
+							diags.Append(attrWriteMissingDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings"})
+						} else {
+							o, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.ObjectType)
+							if !ok {
+								diags.Append(attrWriteConversionFailureDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings", "github.com/hashicorp/terraform-plugin-framework/types.ObjectType"})
+							} else {
+								v, ok := tf.Attrs["client_redirect_settings"].(github_com_hashicorp_terraform_plugin_framework_types.Object)
+								if !ok {
+									v = github_com_hashicorp_terraform_plugin_framework_types.Object{
+
+										AttrTypes: o.AttrTypes,
+										Attrs:     make(map[string]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(o.AttrTypes)),
+									}
+								} else {
+									if v.Attrs == nil {
+										v.Attrs = make(map[string]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(tf.AttrTypes))
+									}
+								}
+								if obj.ClientRedirectSettings == nil {
+									v.Null = true
+								} else {
+									obj := obj.ClientRedirectSettings
+									tf := &v
+									{
+										a, ok := tf.AttrTypes["allowed_https_hostnames"]
+										if !ok {
+											diags.Append(attrWriteMissingDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames"})
+										} else {
+											o, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.ListType)
+											if !ok {
+												diags.Append(attrWriteConversionFailureDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.ListType"})
+											} else {
+												c, ok := tf.Attrs["allowed_https_hostnames"].(github_com_hashicorp_terraform_plugin_framework_types.List)
+												if !ok {
+													c = github_com_hashicorp_terraform_plugin_framework_types.List{
+
+														ElemType: o.ElemType,
+														Elems:    make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames)),
+														Null:     true,
+													}
+												} else {
+													if c.Elems == nil {
+														c.Elems = make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames))
+													}
+												}
+												if obj.AllowedHttpsHostnames != nil {
+													t := o.ElemType
+													if len(obj.AllowedHttpsHostnames) != len(c.Elems) {
+														c.Elems = make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames))
+													}
+													for k, a := range obj.AllowedHttpsHostnames {
+														v, ok := tf.Attrs["allowed_https_hostnames"].(github_com_hashicorp_terraform_plugin_framework_types.String)
+														if !ok {
+															i, err := t.ValueFromTerraform(ctx, github_com_hashicorp_terraform_plugin_go_tftypes.NewValue(t.TerraformType(ctx), nil))
+															if err != nil {
+																diags.Append(attrWriteGeneralError{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", err})
+															}
+															v, ok = i.(github_com_hashicorp_terraform_plugin_framework_types.String)
+															if !ok {
+																diags.Append(attrWriteConversionFailureDiag{"OIDCConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.String"})
+															}
+															v.Null = string(a) == ""
+														}
+														v.Value = string(a)
+														v.Unknown = false
+														c.Elems[k] = v
+													}
+													if len(obj.AllowedHttpsHostnames) > 0 {
+														c.Null = false
+													}
+												}
+												c.Unknown = false
+												tf.Attrs["allowed_https_hostnames"] = c
+											}
+										}
+									}
+								}
+								v.Unknown = false
+								tf.Attrs["client_redirect_settings"] = v
+							}
+						}
+					}
 				}
 				v.Unknown = false
 				tf.Attrs["spec"] = v
@@ -29064,6 +29221,51 @@ func CopySAMLConnectorV2FromTerraform(_ context.Context, tf github_com_hashicorp
 									t = bool(v.Value)
 								}
 								obj.AllowIDPInitiated = t
+							}
+						}
+					}
+					{
+						a, ok := tf.Attrs["client_redirect_settings"]
+						if !ok {
+							diags.Append(attrReadMissingDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings"})
+						} else {
+							v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.Object)
+							if !ok {
+								diags.Append(attrReadConversionFailureDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings", "github.com/hashicorp/terraform-plugin-framework/types.Object"})
+							} else {
+								obj.ClientRedirectSettings = nil
+								if !v.Null && !v.Unknown {
+									tf := v
+									obj.ClientRedirectSettings = &github_com_gravitational_teleport_api_types.SSOClientRedirectSettings{}
+									obj := obj.ClientRedirectSettings
+									{
+										a, ok := tf.Attrs["allowed_https_hostnames"]
+										if !ok {
+											diags.Append(attrReadMissingDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames"})
+										} else {
+											v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.List)
+											if !ok {
+												diags.Append(attrReadConversionFailureDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.List"})
+											} else {
+												obj.AllowedHttpsHostnames = make([]string, len(v.Elems))
+												if !v.Null && !v.Unknown {
+													for k, a := range v.Elems {
+														v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.String)
+														if !ok {
+															diags.Append(attrReadConversionFailureDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames", "github_com_hashicorp_terraform_plugin_framework_types.String"})
+														} else {
+															var t string
+															if !v.Null && !v.Unknown {
+																t = string(v.Value)
+															}
+															obj.AllowedHttpsHostnames[k] = t
+														}
+													}
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 					}
@@ -29914,6 +30116,91 @@ func CopySAMLConnectorV2ToTerraform(ctx context.Context, obj *github_com_gravita
 							tf.Attrs["allow_idp_initiated"] = v
 						}
 					}
+					{
+						a, ok := tf.AttrTypes["client_redirect_settings"]
+						if !ok {
+							diags.Append(attrWriteMissingDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings"})
+						} else {
+							o, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.ObjectType)
+							if !ok {
+								diags.Append(attrWriteConversionFailureDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings", "github.com/hashicorp/terraform-plugin-framework/types.ObjectType"})
+							} else {
+								v, ok := tf.Attrs["client_redirect_settings"].(github_com_hashicorp_terraform_plugin_framework_types.Object)
+								if !ok {
+									v = github_com_hashicorp_terraform_plugin_framework_types.Object{
+
+										AttrTypes: o.AttrTypes,
+										Attrs:     make(map[string]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(o.AttrTypes)),
+									}
+								} else {
+									if v.Attrs == nil {
+										v.Attrs = make(map[string]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(tf.AttrTypes))
+									}
+								}
+								if obj.ClientRedirectSettings == nil {
+									v.Null = true
+								} else {
+									obj := obj.ClientRedirectSettings
+									tf := &v
+									{
+										a, ok := tf.AttrTypes["allowed_https_hostnames"]
+										if !ok {
+											diags.Append(attrWriteMissingDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames"})
+										} else {
+											o, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.ListType)
+											if !ok {
+												diags.Append(attrWriteConversionFailureDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.ListType"})
+											} else {
+												c, ok := tf.Attrs["allowed_https_hostnames"].(github_com_hashicorp_terraform_plugin_framework_types.List)
+												if !ok {
+													c = github_com_hashicorp_terraform_plugin_framework_types.List{
+
+														ElemType: o.ElemType,
+														Elems:    make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames)),
+														Null:     true,
+													}
+												} else {
+													if c.Elems == nil {
+														c.Elems = make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames))
+													}
+												}
+												if obj.AllowedHttpsHostnames != nil {
+													t := o.ElemType
+													if len(obj.AllowedHttpsHostnames) != len(c.Elems) {
+														c.Elems = make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames))
+													}
+													for k, a := range obj.AllowedHttpsHostnames {
+														v, ok := tf.Attrs["allowed_https_hostnames"].(github_com_hashicorp_terraform_plugin_framework_types.String)
+														if !ok {
+															i, err := t.ValueFromTerraform(ctx, github_com_hashicorp_terraform_plugin_go_tftypes.NewValue(t.TerraformType(ctx), nil))
+															if err != nil {
+																diags.Append(attrWriteGeneralError{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames", err})
+															}
+															v, ok = i.(github_com_hashicorp_terraform_plugin_framework_types.String)
+															if !ok {
+																diags.Append(attrWriteConversionFailureDiag{"SAMLConnectorV2.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.String"})
+															}
+															v.Null = string(a) == ""
+														}
+														v.Value = string(a)
+														v.Unknown = false
+														c.Elems[k] = v
+													}
+													if len(obj.AllowedHttpsHostnames) > 0 {
+														c.Null = false
+													}
+												}
+												c.Unknown = false
+												tf.Attrs["allowed_https_hostnames"] = c
+											}
+										}
+									}
+								}
+								v.Unknown = false
+								tf.Attrs["client_redirect_settings"] = v
+							}
+						}
+					}
 				}
 				v.Unknown = false
 				tf.Attrs["spec"] = v
@@ -30451,6 +30738,51 @@ func CopyGithubConnectorV3FromTerraform(_ context.Context, tf github_com_hashico
 									t = string(v.Value)
 								}
 								obj.APIEndpointURL = t
+							}
+						}
+					}
+					{
+						a, ok := tf.Attrs["client_redirect_settings"]
+						if !ok {
+							diags.Append(attrReadMissingDiag{"GithubConnectorV3.Spec.ClientRedirectSettings"})
+						} else {
+							v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.Object)
+							if !ok {
+								diags.Append(attrReadConversionFailureDiag{"GithubConnectorV3.Spec.ClientRedirectSettings", "github.com/hashicorp/terraform-plugin-framework/types.Object"})
+							} else {
+								obj.ClientRedirectSettings = nil
+								if !v.Null && !v.Unknown {
+									tf := v
+									obj.ClientRedirectSettings = &github_com_gravitational_teleport_api_types.SSOClientRedirectSettings{}
+									obj := obj.ClientRedirectSettings
+									{
+										a, ok := tf.Attrs["allowed_https_hostnames"]
+										if !ok {
+											diags.Append(attrReadMissingDiag{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames"})
+										} else {
+											v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.List)
+											if !ok {
+												diags.Append(attrReadConversionFailureDiag{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.List"})
+											} else {
+												obj.AllowedHttpsHostnames = make([]string, len(v.Elems))
+												if !v.Null && !v.Unknown {
+													for k, a := range v.Elems {
+														v, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.String)
+														if !ok {
+															diags.Append(attrReadConversionFailureDiag{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github_com_hashicorp_terraform_plugin_framework_types.String"})
+														} else {
+															var t string
+															if !v.Null && !v.Unknown {
+																t = string(v.Value)
+															}
+															obj.AllowedHttpsHostnames[k] = t
+														}
+													}
+												}
+											}
+										}
+									}
+								}
 							}
 						}
 					}
@@ -31296,6 +31628,91 @@ func CopyGithubConnectorV3ToTerraform(ctx context.Context, obj *github_com_gravi
 							v.Value = string(obj.APIEndpointURL)
 							v.Unknown = false
 							tf.Attrs["api_endpoint_url"] = v
+						}
+					}
+					{
+						a, ok := tf.AttrTypes["client_redirect_settings"]
+						if !ok {
+							diags.Append(attrWriteMissingDiag{"GithubConnectorV3.Spec.ClientRedirectSettings"})
+						} else {
+							o, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.ObjectType)
+							if !ok {
+								diags.Append(attrWriteConversionFailureDiag{"GithubConnectorV3.Spec.ClientRedirectSettings", "github.com/hashicorp/terraform-plugin-framework/types.ObjectType"})
+							} else {
+								v, ok := tf.Attrs["client_redirect_settings"].(github_com_hashicorp_terraform_plugin_framework_types.Object)
+								if !ok {
+									v = github_com_hashicorp_terraform_plugin_framework_types.Object{
+
+										AttrTypes: o.AttrTypes,
+										Attrs:     make(map[string]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(o.AttrTypes)),
+									}
+								} else {
+									if v.Attrs == nil {
+										v.Attrs = make(map[string]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(tf.AttrTypes))
+									}
+								}
+								if obj.ClientRedirectSettings == nil {
+									v.Null = true
+								} else {
+									obj := obj.ClientRedirectSettings
+									tf := &v
+									{
+										a, ok := tf.AttrTypes["allowed_https_hostnames"]
+										if !ok {
+											diags.Append(attrWriteMissingDiag{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames"})
+										} else {
+											o, ok := a.(github_com_hashicorp_terraform_plugin_framework_types.ListType)
+											if !ok {
+												diags.Append(attrWriteConversionFailureDiag{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.ListType"})
+											} else {
+												c, ok := tf.Attrs["allowed_https_hostnames"].(github_com_hashicorp_terraform_plugin_framework_types.List)
+												if !ok {
+													c = github_com_hashicorp_terraform_plugin_framework_types.List{
+
+														ElemType: o.ElemType,
+														Elems:    make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames)),
+														Null:     true,
+													}
+												} else {
+													if c.Elems == nil {
+														c.Elems = make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames))
+													}
+												}
+												if obj.AllowedHttpsHostnames != nil {
+													t := o.ElemType
+													if len(obj.AllowedHttpsHostnames) != len(c.Elems) {
+														c.Elems = make([]github_com_hashicorp_terraform_plugin_framework_attr.Value, len(obj.AllowedHttpsHostnames))
+													}
+													for k, a := range obj.AllowedHttpsHostnames {
+														v, ok := tf.Attrs["allowed_https_hostnames"].(github_com_hashicorp_terraform_plugin_framework_types.String)
+														if !ok {
+															i, err := t.ValueFromTerraform(ctx, github_com_hashicorp_terraform_plugin_go_tftypes.NewValue(t.TerraformType(ctx), nil))
+															if err != nil {
+																diags.Append(attrWriteGeneralError{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", err})
+															}
+															v, ok = i.(github_com_hashicorp_terraform_plugin_framework_types.String)
+															if !ok {
+																diags.Append(attrWriteConversionFailureDiag{"GithubConnectorV3.Spec.ClientRedirectSettings.allowed_https_hostnames", "github.com/hashicorp/terraform-plugin-framework/types.String"})
+															}
+															v.Null = string(a) == ""
+														}
+														v.Value = string(a)
+														v.Unknown = false
+														c.Elems[k] = v
+													}
+													if len(obj.AllowedHttpsHostnames) > 0 {
+														c.Null = false
+													}
+												}
+												c.Unknown = false
+												tf.Attrs["allowed_https_hostnames"] = c
+											}
+										}
+									}
+								}
+								v.Unknown = false
+								tf.Attrs["client_redirect_settings"] = v
+							}
 						}
 					}
 				}

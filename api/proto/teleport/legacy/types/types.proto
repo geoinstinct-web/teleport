@@ -1538,13 +1538,13 @@ message ProvisionTokenSpecV2GCP {
   // Rule is a set of properties the GCP-ussued token might have to be allowed
   // to use this ProvisionToken.
   message Rule {
-    // ProjectIDs is a list of project IDs (e.g. "<example-id-123456>").
+    // ProjectIDs is a list of project IDs (e.g. `<example-id-123456>`).
     repeated string ProjectIDs = 1 [(gogoproto.jsontag) = "project_ids,omitempty"];
     // Locations is a list of regions (e.g. "us-west1") and/or zones (e.g.
     // "us-west1-b").
     repeated string Locations = 2 [(gogoproto.jsontag) = "locations,omitempty"];
     // ServiceAccounts is a list of service account emails (e.g.
-    // "<project-number>-compute@developer.gserviceaccount.com").
+    // `<project-number>-compute@developer.gserviceaccount.com`).
     repeated string ServiceAccounts = 3 [(gogoproto.jsontag) = "service_accounts,omitempty"];
   }
   // Allow is a list of Rules, nodes using this token must match one

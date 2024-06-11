@@ -103,7 +103,6 @@ endif
 	mv ./tfschema/github.com/gravitational/teleport/api/types/device_terraform.go ./tfschema/devicetrust/v1/
 	rm -r ./tfschema/github.com/
 	@go run ./gen/main.go
-	@go run ./gen/main.go docs
 
 .PHONY: release
 ifeq ($(OS)-$(ARCH),darwin-universal)

@@ -6,9 +6,14 @@ description: |-
 
 # teleport_provision_token (Resource)
 
+This is a custom template overriding the default one.
+
+This allows us to provide more examples, custom text while keeping the schema generation.
 
 
 ## Example Usage
+
+This is a regular provision token.
 
 ```hcl
 # Teleport Provision Token resource
@@ -36,6 +41,24 @@ resource "teleport_provision_token" "iam-token" {
   spec = {
     roles       = ["Bot"]
     bot_name    = "mybot"
+    join_method = "iam"
+    allow = [{
+      aws_account = "123456789012"
+    }]
+  }
+}
+```
+
+This is an IAM one:
+
+```hcl
+resource "teleport_provision_token" "iam-token" {
+  version = "v2"
+  metadata = {
+    name = "iam-token"
+  }
+  spec = {
+    roles       = ["Node"]
     join_method = "iam"
     allow = [{
       aws_account = "123456789012"
@@ -137,8 +160,8 @@ Optional:
 Optional:
 
 - `locations` (List of String) Locations is a list of regions (e.g. "us-west1") and/or zones (e.g. "us-west1-b").
-- `project_ids` (List of String) ProjectIDs is a list of project IDs (e.g. "<example-id-123456>").
-- `service_accounts` (List of String) ServiceAccounts is a list of service account emails (e.g. "<project-number>-compute@developer.gserviceaccount.com").
+- `project_ids` (List of String) ProjectIDs is a list of project IDs (e.g. `<example-id-123456>`).
+- `service_accounts` (List of String) ServiceAccounts is a list of service account emails (e.g. `<project-number>-compute@developer.gserviceaccount.com`).
 
 
 
