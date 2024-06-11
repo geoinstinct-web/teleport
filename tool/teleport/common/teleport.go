@@ -541,6 +541,14 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 	collectProfilesCmd.Arg("PROFILES", fmt.Sprintf("Comma-separated profile names to be exported. Supported profiles: %s. Default: %s", strings.Join(maps.Keys(debugclient.SupportedProfiles), ","), strings.Join(defaultCollectProfiles, ","))).StringVar(&ccf.Profiles)
 	collectProfilesCmd.Flag("seconds", "For CPU and trace profiles, profile for the given duration (if set to 0, it returns a profile snapshot). For other profiles, return a delta profile. Default: 0").Short('s').Default("0").IntVar(&ccf.ProfileSeconds)
 
+	backendCmd := app.Command("backend", "Commands for managing backend data.")
+	backendCmd.Hidden()
+	backendCloneCmd := backendCmd.Command("clone", "Clones data from a source to a destination backend.")
+	backendCloneCmd.Flag("config", "Path to the clone config file.").
+		Required().
+		Short('c').
+		StringVar(&ccf.ConfigFile)
+
 	// parse CLI commands+flags:
 	utils.UpdateAppUsageTemplate(app, options.Args)
 	command, err := app.Parse(options.Args)
@@ -663,6 +671,8 @@ func Run(options Options) (app *kingpin.Application, executedCommand string, con
 		err = onGetLogLevel(ccf.ConfigFile)
 	case collectProfilesCmd.FullCommand():
 		err = onCollectProfiles(ccf.ConfigFile, ccf.Profiles, ccf.ProfileSeconds)
+	case backendCloneCmd.FullCommand():
+		err = onClone(context.Background(), ccf.ConfigFile)
 	}
 	if err != nil {
 		utils.FatalError(err)
