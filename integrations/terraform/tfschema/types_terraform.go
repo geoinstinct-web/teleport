@@ -2866,7 +2866,7 @@ func GenSchemaSAMLConnectorV2(ctx context.Context) (github_com_hashicorp_terrafo
 					Type:          github_com_hashicorp_terraform_plugin_framework_types.StringType,
 				},
 				"cert": {
-					Description: "Cert is the identity provider certificate PEM. IDP signs <Response> responses using this certificate.",
+					Description: "Cert is the identity provider certificate PEM. IDP signs `<Response>` responses using this certificate.",
 					Optional:    true,
 					Sensitive:   true,
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
@@ -3225,12 +3225,12 @@ func GenSchemaTrustedClusterV2(ctx context.Context) (github_com_hashicorp_terraf
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
 				},
 				"tunnel_addr": {
-					Description: "ReverseTunnelAddress is the address of the SSH proxy server of the cluster to join. If not set, it is derived from <metadata.name>:<default reverse tunnel port>.",
+					Description: "ReverseTunnelAddress is the address of the SSH proxy server of the cluster to join. If not set, it is derived from `<metadata.name>:<default reverse tunnel port>`.",
 					Optional:    true,
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
 				},
 				"web_proxy_addr": {
-					Description: "ProxyAddress is the address of the web proxy server of the cluster to join. If not set, it is derived from <metadata.name>:<default web proxy server port>.",
+					Description: "ProxyAddress is the address of the web proxy server of the cluster to join. If not set, it is derived from `<metadata.name>:<default web proxy server port>`.",
 					Optional:    true,
 					Type:        github_com_hashicorp_terraform_plugin_framework_types.StringType,
 				},
