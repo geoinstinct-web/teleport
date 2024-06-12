@@ -33,6 +33,8 @@ import { requiredField } from 'shared/components/Validation/rules';
 import UserTokenLink from './../UserTokenLink';
 import useDialog, { Props } from './useDialog';
 
+import { TraitsEditor } from './TraitsEditor';
+
 export default function Container(props: Props) {
   const dialog = useDialog(props);
   return <UserAddEdit {...dialog} />;
@@ -44,12 +46,15 @@ export function UserAddEdit(props: ReturnType<typeof useDialog>) {
     onChangeRoles,
     onClose,
     fetchRoles,
+    setConfiguredTraits,
+    allTraits,
     attempt,
     name,
     selectedRoles,
     onSave,
     isNew,
     token,
+    configuredTraits,
   } = props;
 
   if (attempt.status === 'success' && isNew) {
@@ -69,9 +74,9 @@ export function UserAddEdit(props: ReturnType<typeof useDialog>) {
       {({ validator }) => (
         <Dialog
           dialogCss={() => ({
-            maxWidth: '500px',
+            maxWidth: '700px',
             width: '100%',
-            overflow: 'initial',
+            height: '70%',
           })}
           disableEscapeKeyDown={false}
           onClose={onClose}
@@ -80,11 +85,12 @@ export function UserAddEdit(props: ReturnType<typeof useDialog>) {
           <DialogHeader>
             <DialogTitle>{isNew ? 'Create User' : 'Edit User'}</DialogTitle>
           </DialogHeader>
-          <DialogContent>
+          <DialogContent maxHeight={620} overflow={'auto'}>
             {attempt.status === 'failed' && (
               <Alert kind="danger" children={attempt.statusText} />
             )}
             <FieldInput
+              mr={2}
               label="Username"
               rule={requiredField('Username is required')}
               placeholder="Username"
@@ -94,6 +100,7 @@ export function UserAddEdit(props: ReturnType<typeof useDialog>) {
               readonly={isNew ? false : true}
             />
             <FieldSelectAsync
+              mr={2}
               menuPosition="fixed"
               label="User Roles"
               rule={requiredField('At least one role is required')}
@@ -110,6 +117,12 @@ export function UserAddEdit(props: ReturnType<typeof useDialog>) {
                 return roles.map(r => ({ value: r, label: r }));
               }}
               elevated={true}
+            />
+            <TraitsEditor
+              allTraits={allTraits}
+              attempt={attempt}
+              configuredTraits={configuredTraits}
+              setConfiguredTraits={setConfiguredTraits}
             />
           </DialogContent>
           <DialogFooter>
